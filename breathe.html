@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>呼吸练习</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 300;
+      margin-bottom: 1rem;
+    }
+
+    .mode-selector {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .mode-btn {
+      padding: 0.5rem 1rem;
+      background: #16213e;
+      border: 2px solid #333;
+      color: #888;
+      border-radius: 2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+
+    .mode-btn:hover {
+      border-color: #4ecdc4;
+      color: #4ecdc4;
+    }
+
+    .mode-btn.active {
+      background: #4ecdc4;
+      border-color: #4ecdc4;
+      color: #1a1a2e;
+    }
+
+    #breath-circle {
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1a4a4a, #0d2626);
+      margin: 0 auto 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 60px rgba(78, 205, 196, 0.2);
+      transition: transform 0.1s linear;
+    }
+
+    .circle-inner {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: rgba(78, 205, 196, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.1s linear;
+    }
+
+    #phase-text {
+      font-size: 1.5rem;
+      font-weight: 300;
+      margin-bottom: 0.5rem;
+      color: #4ecdc4;
+    }
+
+    #countdown {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .instruction {
+      font-size: 1.1rem;
+      color: #888;
+      margin-bottom: 2rem;
+      min-height: 1.5rem;
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: #4ecdc4;
+      color: #1a1a2e;
+    }
+
+    .btn-primary:hover {
+      background: #3dbdb5;
+      transform: scale(1.05);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 2px solid #4ecdc4;
+      color: #4ecdc4;
+    }
+
+    .btn-secondary:hover {
+      background: #4ecdc4;
+      color: #1a1a2e;
+    }
+
+    .presets {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .preset {
+      padding: 1rem 1.5rem;
+      background: #16213e;
+      border-radius: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .preset:hover {
+      border-color: #4ecdc4;
+    }
+
+    .preset-name {
+      font-size: 0.9rem;
+      color: #4ecdc4;
+      margin-bottom: 0.25rem;
+    }
+
+    .preset-desc {
+      font-size: 0.75rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>呼吸练习</h1>
+
+    <div class="mode-selector">
+      <button class="mode-btn active" data-mode="4-7-8">4-7-8 呼吸</button>
+      <button class="mode-btn" data-mode="box">方盒呼吸</button>
+      <button class="mode-btn" data-mode="478">4-7 呼吸</button>
+      <button class="mode-btn" data-mode="custom">自定义</button>
+    </div>
+
+    <div id="breath-circle">
+      <div class="circle-inner">
+        <div id="phase-text">准备</div>
+        <div id="countdown">-</div>
+      </div>
+    </div>
+
+    <div class="instruction" id="instruction">选择一个呼吸模式开始</div>
+
+    <div class="controls">
+      <button class="btn btn-primary" id="startBtn">开始</button>
+      <button class="btn btn-secondary" id="stopBtn" style="display:none;">停止</button>
+    </div>
+
+    <div class="presets" id="presets">
+      <div class="preset" data-inhale="4" data-hold="7" data-exhale="8">
+        <div class="preset-name">放松</div>
+        <div class="preset-desc">吸4 屏7 呼8</div>
+      </div>
+      <div class="preset" data-inhale="4" data-hold="4" data-exhale="4">
+        <div class="preset-name">方盒呼吸</div>
+        <div class="preset-desc">吸4 屏4 呼4</div>
+      </div>
+      <div class="preset" data-inhale="4" data-hold="7" data-exhale="0">
+        <div class="preset-name">快速镇静</div>
+        <div class="preset-desc">吸4 屏7</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const circle = document.getElementById('breath-circle');
+    const phaseText = document.getElementById('phase-text');
+    const countdown = document.getElementById('countdown');
+    const instruction = document.getElementById('instruction');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const modeBtns = document.querySelectorAll('.mode-btn');
+    const presets = document.querySelectorAll('.preset');
+
+    let isRunning = false;
+    let currentMode = '4-7-8';
+    let intervalId = null;
+    let animationFrame = null;
+
+    // 模式配置 (秒)
+    const modes = {
+      '4-7-8': { inhale: 4, hold: 7, exhale: 8, hold2: 0 },
+      'box': { inhale: 4, hold: 4, exhale: 4, hold2: 4 },
+      '478': { inhale: 4, hold: 7, exhale: 0, hold2: 0 },
+      'custom': { inhale: 4, hold: 4, exhale: 4, hold2: 0 }
+    };
+
+    let customConfig = { inhale: 4, hold: 4, exhale: 4, hold2: 0 };
+
+    modeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        modeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentMode = btn.dataset.mode;
+
+        if (currentMode === 'custom') {
+          customConfig = prompt('设置(秒): 吸气,屏息,呼气,屏息2', '4,4,4,4')
+            .split(',').map(n => parseInt(n.trim()) || 4);
+        }
+      });
+    });
+
+    presets.forEach(preset => {
+      preset.addEventListener('click', () => {
+        const inhale = parseInt(preset.dataset.inhale);
+        const hold = parseInt(preset.dataset.hold);
+        const exhale = parseInt(preset.dataset.exhale);
+        customConfig = { inhale, hold, exhale, hold2: 0 };
+
+        modeBtns.forEach(b => b.classList.remove('active'));
+        document.querySelector('[data-mode="custom"]').classList.add('active');
+        currentMode = 'custom';
+      });
+    });
+
+    startBtn.addEventListener('click', startBreathing);
+    stopBtn.addEventListener('click', stopBreathing);
+
+    function getConfig() {
+      if (currentMode === 'custom') return customConfig;
+      return modes[currentMode];
+    }
+
+    function startBreathing() {
+      isRunning = true;
+      startBtn.style.display = 'none';
+      stopBtn.style.display = 'inline-block';
+      instruction.textContent = '跟随圆圈节奏呼吸';
+
+      runBreathCycle();
+    }
+
+    function stopBreathing() {
+      isRunning = false;
+      clearTimeout(intervalId);
+      cancelAnimationFrame(animationFrame);
+
+      startBtn.style.display = 'inline-block';
+      stopBtn.style.display = 'none';
+
+      circle.style.transform = 'scale(1)';
+      phaseText.textContent = '完成';
+      countdown.textContent = '-';
+      instruction.textContent = '随时可以再次开始';
+    }
+
+    function runBreathCycle() {
+      if (!isRunning) return;
+
+      const config = getConfig();
+
+      // 吸气
+      breathePhase('吸气', config.inhale, 1.5, () => {
+        // 屏息
+        if (config.hold > 0) {
+          breathePhase('屏息', config.hold, 1.5, () => {
+            // 呼气
+            breathePhase('呼气', config.exhale, 1, () => {
+              // 屏息2
+              if (config.hold2 > 0) {
+                breathePhase('屏息', config.hold2, 1, runBreathCycle);
+              } else {
+                runBreathCycle();
+              }
+            });
+          });
+        } else {
+          // 呼气
+          breathePhase('呼气', config.exhale, 1, runBreathCycle);
+        }
+      });
+    }
+
+    function breathePhase(phase, duration, scale, callback) {
+      if (!isRunning) return;
+
+      phaseText.textContent = phase;
+      const startTime = performance.now();
+
+      function animate() {
+        if (!isRunning) return;
+
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(elapsed / (duration * 1000), 1);
+        const remaining = Math.ceil(duration - elapsed / 1000);
+
+        countdown.textContent = remaining > 0 ? remaining : '';
+
+        // 缩放动画
+        const targetScale = phase === '呼气' ? 1 : scale;
+        const currentScale = 1 + (targetScale - 1) * (phase === '呼气' ? (1 - progress) : progress);
+        circle.style.transform = `scale(${currentScale})`;
+
+        if (progress < 1) {
+          animationFrame = requestAnimationFrame(animate);
+        } else {
+          callback();
+        }
+      }
+
+      animationFrame = requestAnimationFrame(animate);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>节拍器</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 300;
+      margin-bottom: 2rem;
+    }
+
+    .tempo-display {
+      margin-bottom: 2rem;
+    }
+
+    .tempo-value {
+      font-size: 6rem;
+      font-weight: bold;
+      color: #4ecdc4;
+      line-height: 1;
+    }
+
+    .tempo-label {
+      font-size: 1rem;
+      color: #666;
+      margin-top: 0.5rem;
+    }
+
+    .visualizer {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 2rem;
+      position: relative;
+    }
+
+    .tick-marker {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #16213e;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 0.05s;
+    }
+
+    .tick-marker.active {
+      background: #4ecdc4;
+      box-shadow: 0 0 30px #4ecdc4;
+    }
+
+    .beat-dots {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+
+    .beat-dot {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: #333;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform-origin: center;
+      transition: all 0.1s;
+    }
+
+    .beat-dot.active {
+      background: #4ecdc4;
+      box-shadow: 0 0 15px #4ecdc4;
+    }
+
+    .beat-dot.stress {
+      background: #ff6b6b;
+      box-shadow: 0 0 15px #ff6b6b;
+    }
+
+    .tempo-control {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .tempo-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #16213e;
+      border: 2px solid #333;
+      color: #eee;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tempo-btn:hover {
+      border-color: #4ecdc4;
+      color: #4ecdc4;
+    }
+
+    .tempo-slider-container {
+      width: 200px;
+    }
+
+    .tempo-slider {
+      width: 100%;
+      height: 8px;
+      -webkit-appearance: none;
+      background: #16213e;
+      border-radius: 4px;
+      outline: none;
+    }
+
+    .tempo-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      background: #4ecdc4;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tempo-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .presets {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .preset {
+      padding: 0.5rem 1rem;
+      background: #16213e;
+      border: 2px solid #333;
+      color: #888;
+      border-radius: 2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.85rem;
+    }
+
+    .preset:hover {
+      border-color: #4ecdc4;
+      color: #4ecdc4;
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .btn {
+      padding: 1rem 3rem;
+      font-size: 1.2rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: #4ecdc4;
+      color: #1a1a2e;
+    }
+
+    .btn-primary:hover {
+      background: #3dbdb5;
+      transform: scale(1.05);
+    }
+
+    .btn-stop {
+      background: #ff6b6b;
+      color: #fff;
+    }
+
+    .btn-stop:hover {
+      background: #ee5a5a;
+    }
+
+    .beat-selector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .beat-selector label {
+      color: #888;
+    }
+
+    .beat-count {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .beat-option {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #16213e;
+      border: 2px solid #333;
+      color: #888;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+
+    .beat-option:hover {
+      border-color: #4ecdc4;
+    }
+
+    .beat-option.active {
+      background: #4ecdc4;
+      border-color: #4ecdc4;
+      color: #1a1a2e;
+    }
+
+    .volume-control {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 2rem;
+      color: #888;
+    }
+
+    .volume-slider {
+      width: 120px;
+      height: 6px;
+      -webkit-appearance: none;
+      background: #16213e;
+      border-radius: 3px;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #4ecdc4;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>节拍器</h1>
+
+    <div class="presets">
+      <button class="preset" data-tempo="60">慢速 60</button>
+      <button class="preset" data-tempo="80">中速 80</button>
+      <button class="preset" data-tempo="100">行板 100</button>
+      <button class="preset" data-tempo="120">快板 120</button>
+      <button class="preset" data-tempo="140">急板 140</button>
+      <button class="preset" data-tempo="180">最快 180</button>
+    </div>
+
+    <div class="tempo-display">
+      <div class="tempo-value" id="tempoValue">120</div>
+      <div class="tempo-label">BPM</div>
+    </div>
+
+    <div class="visualizer">
+      <div class="beat-marker" id="marker"></div>
+      <div class="beat-dots" id="beatDots"></div>
+    </div>
+
+    <div class="beat-selector">
+      <label>拍号:</label>
+      <div class="beat-count">
+        <button class="beat-option active" data-beat="2">2/4</button>
+        <button class="beat-option" data-beat="3">3/4</button>
+        <button class="beat-option" data-beat="4">4/4</button>
+      </div>
+    </div>
+
+    <div class="tempo-control">
+      <button class="tempo-btn" id="tempoDown">-</button>
+      <div class="tempo-slider-container">
+        <input type="range" class="tempo-slider" id="tempoSlider" min="40"" value="120 max="240">
+      </div>
+      <button class="tempo-btn" id="tempoUp">+</button>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-primary" id="startBtn">开始</button>
+      <button class="btn btn-stop" id="stopBtn" style="display:none;">停止</button>
+    </div>
+
+    <div class="volume-control">
+      <span>🔊</span>
+      <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="50">
+    </div>
+  </div>
+
+  <script>
+    const tempoValue = document.getElementById('tempoValue');
+    const tempoSlider = document.getElementById('tempoSlider');
+    const tempoUp = document.getElementById('tempoUp');
+    const tempoDown = document.getElementById('tempoDown');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const marker = document.getElementById('marker');
+    const beatDots = document.getElementById('beatDots');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const beatOptions = document.querySelectorAll('.beat-option');
+    const presets = document.querySelectorAll('.preset');
+
+    let isPlaying = false;
+    let tempo = 120;
+    let beatCount = 4;
+    let currentBeat = 0;
+    let intervalId = null;
+    let audioContext = null;
+
+    // 创建音频上下文
+    function initAudio() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    // 播放节拍声
+    function playClick(isStress) {
+      initAudio();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.value = isStress ? 1000 : 800;
+      oscillator.type = 'sine';
+
+      const volume = volumeSlider.value / 100;
+      gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    }
+
+    // 生成节拍点
+    function generateBeatDots() {
+      beatDots.innerHTML = '';
+      const radius = 80;
+      for (let i = 0; i < beatCount; i++) {
+        const angle = (i / beatCount) * Math.PI * 2 - Math.PI / 2;
+        const dot = document.createElement('div');
+        dot.className = 'beat-dot';
+        dot.style.transform = `translate(${Math.cos(angle) * radius}px, ${Math.sin(angle) * radius}px)`;
+        beatDots.appendChild(dot);
+      }
+    }
+
+    generateBeatDots();
+
+    function updateTempo(newTempo) {
+      tempo = Math.max(40, Math.min(240, newTempo));
+      tempoValue.textContent = tempo;
+      tempoSlider.value = tempo;
+
+      if (isPlaying) {
+        stopBeat();
+        startBeat();
+      }
+    }
+
+    function startBeat() {
+      if (isPlaying) return;
+      isPlaying = true;
+      startBtn.style.display = 'none';
+      stopBtn.style.display = 'inline-block';
+      currentBeat = 0;
+
+      initAudio();
+
+      const interval = (60 / tempo) * 1000;
+      intervalId = setInterval(() => {
+        const isStress = currentBeat === 0;
+        playClick(isStress);
+
+        // 视觉反馈
+        marker.classList.add('active');
+        setTimeout(() => marker.classList.remove('active'), 50);
+
+        const dots = beatDots.querySelectorAll('.beat-dot');
+        dots.forEach((dot, i) => {
+          dot.classList.remove('active', 'stress');
+          if (i === currentBeat) {
+            dot.classList.add('active');
+            if (currentBeat === 0) dot.classList.add('stress');
+          }
+        });
+
+        currentBeat = (currentBeat + 1) % beatCount;
+      }, interval);
+    }
+
+    function stopBeat() {
+      isPlaying = false;
+      clearInterval(intervalId);
+      startBtn.style.display = 'inline-block';
+      stopBtn.style.display = 'none';
+      marker.classList.remove('active');
+
+      const dots = beatDots.querySelectorAll('.beat-dot');
+      dots.forEach(dot => dot.classList.remove('active', 'stress'));
+    }
+
+    tempoSlider.addEventListener('input', () => updateTempo(parseInt(tempoSlider.value)));
+    tempoUp.addEventListener('click', () => updateTempo(tempo + 1));
+    tempoDown.addEventListener('click', () => updateTempo(tempo - 1));
+
+    startBtn.addEventListener('click', startBeat);
+    stopBtn.addEventListener('click', stopBeat);
+
+    beatOptions.forEach(btn => {
+      btn.addEventListener('click', () => {
+        beatOptions.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        beatCount = parseInt(btn.dataset.beat);
+        generateBeatDots();
+      });
+    });
+
+    presets.forEach(btn => {
+      btn.addEventListener('click', () => {
+        updateTempo(parseInt(btn.dataset.tempo));
+      });
+    });
+  </script>
+</body>
+</html>

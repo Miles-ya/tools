@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>字符画生成器</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 300;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .upload-area {
+      border: 2px dashed #333;
+      border-radius: 1rem;
+      padding: 3rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .upload-area:hover,
+    .upload-area.dragover {
+      border-color: #4ecdc4;
+      background: rgba(78, 205, 196, 0.05);
+    }
+
+    .upload-area p {
+      color: #888;
+      margin-bottom: 1rem;
+    }
+
+    .upload-btn {
+      padding: 0.75rem 2rem;
+      background: #4ecdc4;
+      border: none;
+      border-radius: 2rem;
+      color: #1a1a2e;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .upload-btn:hover {
+      background: #3dbdb5;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .controls {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .control-group label {
+      font-size: 0.85rem;
+      color: #888;
+    }
+
+    .control-group input[type="range"] {
+      width: 150px;
+    }
+
+    .control-group select {
+      padding: 0.5rem 1rem;
+      background: #16213e;
+      border: 1px solid #333;
+      color: #eee;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+
+    .char-set-preview {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+
+    .output-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .output-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .output-box {
+      background: #16213e;
+      border-radius: 1rem;
+      padding: 1.5rem;
+    }
+
+    .output-box h3 {
+      font-size: 1rem;
+      font-weight: 400;
+      color: #888;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .output-box pre {
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow: auto;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 8px;
+      line-height: 1;
+      white-space: pre;
+      max-height: 500px;
+      word-break: break-all;
+    }
+
+    .copy-btn {
+      padding: 0.25rem 0.75rem;
+      background: #333;
+      border: none;
+      border-radius: 1rem;
+      color: #888;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: #4ecdc4;
+      color: #1a1a2e;
+    }
+
+    .preview-img {
+      max-width: 200px;
+      max-height: 200px;
+      margin-bottom: 1rem;
+      border-radius: 0.5rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    .btn {
+      padding: 0.75rem 2rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      font-size: 1rem;
+    }
+
+    .btn-primary {
+      background: #4ecdc4;
+      color: #1a1a2e;
+    }
+
+    .btn-primary:hover {
+      background: #3dbdb5;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 2px solid #4ecdc4;
+      color: #4ecdc4;
+    }
+
+    .btn-secondary:hover {
+      background: #4ecdc4;
+      color: #1a1a2e;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>字符画生成器</h1>
+
+    <div class="upload-area" id="uploadArea">
+      <p>拖拽图片到这里，或点击选择图片</p>
+      <button class="upload-btn">选择图片</button>
+      <input type="file" id="fileInput" accept="image/*">
+    </div>
+
+    <img id="previewImg" class="preview-img hidden">
+
+    <div class="controls">
+      <div class="control-group">
+        <label>宽度: <span id="widthValue">100</span> 字符</label>
+        <input type="range" id="widthSlider" min="20" max="200" value="100">
+      </div>
+
+      <div class="control-group">
+        <label>字符集</label>
+        <select id="charSet">
+          <option value="simple">简单 (@%#*+=-:. )</option>
+          <option value="complex">复杂 ($@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,"^`'. )</option>
+          <option value="blocks">方块 (█▓▒░ )</option>
+          <option value="binary">二进制 (01)</option>
+          <option value="hearts">爱心 (♥♡)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>反转颜色</label>
+        <select id="invert">
+          <option value="normal">正常</option>
+          <option value="invert">反转</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="output-container">
+      <div class="output-box">
+        <h3>
+          ASCII 字符画
+          <button class="copy-btn" id="copyAscii">复制</button>
+        </h3>
+        <pre id="asciiOutput">上传图片后自动生成</pre>
+      </div>
+
+      <div class="output-box">
+        <h3>
+          HTML 预览
+          <button class="copy-btn" id="copyHtml">复制</button>
+        </h3>
+        <pre id="htmlOutput" style="font-size: 6px; color: #4ecdc4; background: #0d1117;">上传图片后自动生成</pre>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="downloadBtn">下载为文本文件</button>
+    </div>
+  </div>
+
+  <script>
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const previewImg = document.getElementById('previewImg');
+    const widthSlider = document.getElementById('widthSlider');
+    const widthValue = document.getElementById('widthValue');
+    const charSetSelect = document.getElementById('charSet');
+    const invertSelect = document.getElementById('invert');
+    const asciiOutput = document.getElementById('asciiOutput');
+    const htmlOutput = document.getElementById('htmlOutput');
+    const copyAscii = document.getElementById('copyAscii');
+    const copyHtml = document.getElementById('copyHtml');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    let currentImage = null;
+
+    const charSets = {
+      simple: '@%#*+=-:. ',
+      complex: '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,"^`\'. ',
+      blocks: '█▓▒░ ',
+      binary: '01',
+      hearts: '♥♡'
+    };
+
+    // 拖拽上传
+    uploadArea.addEventListener('dragover', e => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        loadImage(file);
+      }
+    });
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => {
+      if (e.target.files[0]) loadImage(e.target.files[0]);
+    });
+
+    widthSlider.addEventListener('input', () => {
+      widthValue.textContent = widthSlider.value;
+      if (currentImage) generateAscii();
+    });
+
+    charSetSelect.addEventListener('change', () => {
+      if (currentImage) generateAscii();
+    });
+
+    invertSelect.addEventListener('change', () => {
+      if (currentImage) generateAscii();
+    });
+
+    function loadImage(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          currentImage = img;
+          previewImg.src = e.target.result;
+          previewImg.classList.remove('hidden');
+          generateAscii();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function generateAscii() {
+      if (!currentImage) return;
+
+      const width = parseInt(widthSlider.value);
+      const height = Math.floor(width * (currentImage.height / currentImage.width) / 2);
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = width;
+      canvas.height = height;
+
+      ctx.drawImage(currentImage, 0, 0, width, height);
+
+      const imageData = ctx.getImageData(0, 0, width, height);
+      const pixels = imageData.data;
+
+      let chars = charSets[charSetSelect.value];
+      if (invertSelect.value === 'invert') {
+        chars = chars.split('').reverse().join('');
+      }
+
+      let ascii = '';
+      let html = '';
+
+      for (let y = 0; y < height; y++) {
+        let line = '';
+        let htmlLine = '';
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          const r = pixels[i];
+          const g = pixels[i + 1];
+          const b = pixels[i + 2];
+          const brightness = (r + g + b) / 3;
+          const charIndex = Math.floor((brightness / 255) * (chars.length - 1));
+          const char = chars[charIndex];
+
+          line += char;
+          htmlLine += `<span style="color:rgb(${r},${g},${b})">${char}</span>`;
+        }
+        ascii += line + '\n';
+        html += htmlLine + '<br>';
+      }
+
+      asciiOutput.textContent = ascii;
+      htmlOutput.innerHTML = html;
+    }
+
+    copyAscii.addEventListener('click', () => {
+      navigator.clipboard.writeText(asciiOutput.textContent);
+      copyAscii.textContent = '已复制';
+      setTimeout(() => copyAscii.textContent = '复制', 1500);
+    });
+
+    copyHtml.addEventListener('click', () => {
+      const html = `<pre style="font-family:monospace;font-size:8px;line-height:1;white-space:pre;">${htmlOutput.innerHTML}</pre>`;
+      navigator.clipboard.writeText(html);
+      copyHtml.textContent = '已复制';
+      setTimeout(() => copyHtml.textContent = '复制', 1500);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const blob = new Blob([asciiOutput.textContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ascii-art.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>

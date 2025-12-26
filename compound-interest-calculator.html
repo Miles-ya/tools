@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>复利计算器 | Investor Tools</title>
+    <!-- ECharts CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #005ea2;
+            --primary-dark: #1a4480;
+            --secondary-color: #565c65;
+            --bg-light: #f0f0f0;
+            --bg-white: #ffffff;
+            --border-color: #dfe1e2;
+            --success-color: #00a91c;
+            --warning-color: #e5a000;
+            --text-primary: #1b1b1b;
+            --text-secondary: #565c65;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: var(--bg-white);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 24px 32px;
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .required-note {
+            background: #fff3cd;
+            padding: 12px 24px;
+            font-size: 0.875rem;
+            color: #856404;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .required-note strong span {
+            color: #d32f2f;
+        }
+
+        .calculator-form {
+            padding: 24px;
+        }
+
+        .step {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .step:last-of-type {
+            border-bottom: none;
+        }
+
+        .step h3 {
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-color);
+            display: inline-block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        label .required {
+            color: #d32f2f;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            max-width: 280px;
+            padding: 12px 16px;
+            font-size: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            background: var(--bg-white);
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 94, 162, 0.15);
+        }
+
+        input.has-error {
+            border-color: #d32f2f;
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        button {
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .results-section {
+            display: none;
+            padding: 24px;
+            background: #f8f9fa;
+            border-top: 3px solid var(--primary-color);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-summary {
+            background: var(--primary-color);
+            color: white;
+            padding: 24px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .results-summary h2 {
+            font-size: 0.95rem;
+            font-weight: 500;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .results-summary .amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .breakdown {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .breakdown-item {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .breakdown-item .label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .breakdown-item .value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .breakdown-item.principal .value {
+            color: var(--secondary-color);
+        }
+
+        .breakdown-item.interest .value {
+            color: var(--success-color);
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 24px;
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        #growthChart {
+            width: 100%;
+            height: 350px;
+        }
+
+        .disclaimer {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            padding: 16px;
+            background: #fff3cd;
+            border-radius: 4px;
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .yearly-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            font-size: 0.9rem;
+        }
+
+        .yearly-table th,
+        .yearly-table td {
+            padding: 10px 12px;
+            text-align: right;
+            border: 1px solid var(--border-color);
+        }
+
+        .yearly-table th {
+            background: var(--bg-light);
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .yearly-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .yearly-section {
+            margin-top: 24px;
+        }
+
+        .toggle-details {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toggle-details:hover {
+            text-decoration: underline;
+        }
+
+        .details-content {
+            display: none;
+        }
+
+        .details-content.show {
+            display: block;
+        }
+
+        .error-message {
+            color: #d32f2f;
+            font-size: 0.85rem;
+            margin-top: 6px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .breakdown {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .results-summary .amount {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>复利计算器</h1>
+            <p>了解您的资金如何通过复利增长</p>
+        </header>
+
+        <div class="required-note">
+            <strong><span>*</span> 表示必填项</strong>
+        </div>
+
+        <form class="calculator-form" id="compoundForm">
+            <div class="step">
+                <h3>第一步：初始投资</h3>
+                <div class="form-group">
+                    <label for="principal">初始投资金额 <span class="required">*</span></label>
+                    <input type="text" id="principal" name="principal" placeholder="例如：10000" required>
+                    <div class="help-text">您可用于投资的初始资金金额</div>
+                    <div class="error-message" id="principalError">请输入有效的金额</div>
+                </div>
+            </div>
+
+            <div class="step">
+                <h3>第二步：定期供款</h3>
+                <div class="form-group">
+                    <label for="monthlyContribution">每月追加金额</label>
+                    <input type="text" id="monthlyContribution" name="monthlyContribution" placeholder="例如：500">
+                    <div class="help-text">每月计划追加的金额（输入负数表示每月提取）</div>
+                </div>
+                <div class="form-group">
+                    <label for="years">投资年限 <span class="required">*</span></label>
+                    <input type="text" id="years" name="years" placeholder="例如：10" required>
+                    <div class="help-text">计划投资的年数</div>
+                    <div class="error-message" id="yearsError">请输入有效的年数</div>
+                </div>
+            </div>
+
+            <div class="step">
+                <h3>第三步：利率设置</h3>
+                <div class="form-group">
+                    <label for="interestRate">预计年化利率 (%) <span class="required">*</span></label>
+                    <input type="text" id="interestRate" name="interestRate" placeholder="例如：6" required>
+                    <div class="help-text">预期的年化利率</div>
+                    <div class="error-message" id="interestRateError">请输入有效的利率</div>
+                </div>
+                <div class="form-group">
+                    <label for="rateVariance">利率波动范围</label>
+                    <input type="text" id="rateVariance" name="rateVariance" placeholder="例如：1">
+                    <div class="help-text">希望查看的利率波动范围（上下各一半）</div>
+                </div>
+            </div>
+
+            <div class="step">
+                <h3>第四步：复利频率</h3>
+                <div class="form-group">
+                    <label for="compoundFrequency">复利计算周期</label>
+                    <select id="compoundFrequency" name="compoundFrequency">
+                        <option value="1">每年</option>
+                        <option value="2">每半年</option>
+                        <option value="4">每季度</option>
+                        <option value="12" selected>每月</option>
+                        <option value="365">每天</option>
+                    </select>
+                    <div class="help-text">每年计算复利的次数</div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn-primary">计算</button>
+                <button type="button" class="btn-secondary" id="resetBtn">重置</button>
+            </div>
+        </form>
+
+        <div class="results-section" id="resultsSection">
+            <div class="results-summary">
+                <h2 id="yearsLabel">10 年后的总价值</h2>
+                <div class="amount" id="totalAmount">¥0</div>
+            </div>
+
+            <div class="breakdown">
+                <div class="breakdown-item principal">
+                    <div class="label">本金总额</div>
+                    <div class="value" id="principalTotal">¥0</div>
+                </div>
+                <div class="breakdown-item">
+                    <div class="label">利息收益</div>
+                    <div class="value" id="interestTotal">¥0</div>
+                </div>
+                <div class="breakdown-item">
+                    <div class="label">收益率</div>
+                    <div class="value" id="returnRate">0%</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">资金增长趋势</div>
+                <div id="growthChart"></div>
+
+            </div>
+
+            <div class="yearly-section">
+                <button class="toggle-details" id="toggleDetails">
+                    <span>▼</span> 显示年度明细
+                </button>
+                <div class="details-content" id="detailsContent">
+                    <table class="yearly-table">
+                        <thead id="yearlyHead">
+                            <tr>
+                                <th>年份</th>
+                                <th>未来值 (10.00%)</th>
+                                <th>总贡献金额</th>
+                            </tr>
+                        </thead>
+                        <tbody id="yearlyBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="disclaimer" style="margin-top: 24px;">
+                <strong>免责声明：</strong>此计算器仅供参考，不构成投资建议。实际投资表现可能与计算结果不同。请咨询专业的理财顾问做出投资决策。
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ECharts 实例
+        let chart = null;
+
+        // 格式化货币
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('zh-CN', {
+                style: 'currency',
+                currency: 'CNY',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+        }
+
+        // 解析输入为数字
+        function parseNumber(str) {
+            const num = parseFloat(str.replace(/[^\d.-]/g, ''));
+            return isNaN(num) ? null : num;
+        }
+
+        // 复利计算（带定期供款）
+        function calculateCompoundInterest(principal, monthlyContribution, annualRate, years, compoundFrequency) {
+            const monthlyRate = annualRate / 100 / 12;
+            const months = years * 12;
+            const results = [];
+            let balance = principal;
+            let totalPrincipal = principal;
+
+            for (let month = 1; month <= months; month++) {
+                balance = balance * (1 + monthlyRate) + monthlyContribution;
+                totalPrincipal += monthlyContribution;
+
+                // 每年记录一次
+                if (month % 12 === 0) {
+                    results.push({
+                        year: month / 12,
+                        balance: balance,
+                        totalPrincipal: totalPrincipal,
+                        yearlyInterest: balance - totalPrincipal
+                    });
+                }
+            }
+
+            return {
+                finalBalance: balance,
+                totalPrincipal: totalPrincipal,
+                totalInterest: balance - totalPrincipal,
+                yearlyData: results
+            };
+        }
+
+        // 绘制增长图表 (ECharts)
+        function drawChart(dataList, baseRate) {
+            const chartDom = document.getElementById('growthChart');
+
+            if (!chart) {
+                chart = echarts.init(chartDom);
+            }
+
+            // dataList 是数组，元素是 {rate, data: [...]}
+            // X轴标签
+            const years = dataList[0].data.map(d => `第${d.year}年`);
+
+            // 构建系列数据
+            const series = dataList.map((item) => {
+                const balances = item.data.map(d => d.balance);
+                return {
+                    name: item.rate.toFixed(1) + '%',
+                    type: 'line',
+                    data: balances,
+                    smooth: true,
+                    symbol: 'circle',
+                    symbolSize: 6,
+                    lineStyle: {
+                        width: 2
+                    },
+                    markLine: {
+                        silent: true
+                    },
+                    emphasis: {
+                        focus: 'series'
+                    }
+                };
+            });
+
+            // 根据线条数量设置不同颜色
+            const colors = ['#00a91c', '#005ea2', '#d32f2f'];
+            series.forEach((s, i) => {
+                s.itemStyle = { color: colors[i] || '#565c65' };
+            });
+
+            // 生成图例
+            const legendData = series.map(s => s.name);
+
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    },
+                    formatter: function(params) {
+                        let result = params[0].axisValue + '<br/>';
+                        params.forEach(param => {
+                            result += param.marker + ' ' + param.seriesName + ': ' + formatCurrency(param.value) + '<br/>';
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: legendData,
+                    bottom: 0
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    top: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: years
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        formatter: function(value) {
+                            if (value >= 10000) {
+                                return (value / 10000) + '万';
+                            }
+                            return value;
+                        }
+                    }
+                },
+                series: series
+            };
+
+            chart.setOption(option, true);
+        }
+
+        // 获取不同利率的年度数据
+        function getYearlyDataList(principal, monthlyContribution, years, baseRate, variance) {
+            const list = [];
+
+            if (variance && variance > 0) {
+                // 三条线：低、基准、高利率
+                const rates = [baseRate - variance, baseRate, baseRate + variance].filter(r => r > 0);
+                rates.forEach(rate => {
+                    const result = calculateCompoundInterest(principal, monthlyContribution, rate, years, 12);
+                    list.push({ rate, data: result.yearlyData });
+                });
+            } else {
+                // 只有基准利率
+                const result = calculateCompoundInterest(principal, monthlyContribution, baseRate, years, 12);
+                list.push({ rate: baseRate, data: result.yearlyData });
+            }
+
+            return list;
+        }
+
+        // 生成年度明细表格
+        function generateYearlyTable(dataList, baseRate, variance) {
+            const tbody = document.getElementById('yearlyBody');
+            const thead = document.getElementById('yearlyHead');
+            tbody.innerHTML = '';
+
+            const hasVariance = variance && variance > 0;
+            const aboveRate = baseRate + variance;
+            const belowRate = baseRate - variance;
+
+            if (hasVariance) {
+                // 四列表头：上方 > 基准值 > 下方
+                thead.innerHTML = `
+                    <tr>
+                        <th>年份</th>
+                        <th>方差高于 (${aboveRate.toFixed(2)}%)</th>
+                        <th>未来值 (${baseRate.toFixed(2)}%)</th>
+                        <th>方差低于 (${belowRate.toFixed(2)}%)</th>
+                    </tr>
+                `;
+
+                dataList[0].data.forEach((d, i) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="text-align: center;">${d.year}</td>
+                        <td>${formatCurrency(dataList[2].data[i].balance)}</td>
+                        <td>${formatCurrency(dataList[1].data[i].balance)}</td>
+                        <td>${formatCurrency(dataList[0].data[i].balance)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                // 三列表头
+                thead.innerHTML = `
+                    <tr>
+                        <th>年份</th>
+                        <th>未来值 (${baseRate.toFixed(2)}%)</th>
+                        <th>总贡献金额</th>
+                    </tr>
+                `;
+
+                const data = dataList[0].data;
+                data.forEach(d => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="text-align: center;">${d.year}</td>
+                        <td>${formatCurrency(d.balance)}</td>
+                        <td>${formatCurrency(d.totalPrincipal)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        // 显示结果
+        function showResults(result, years, rate, variance) {
+            document.getElementById('yearsLabel').textContent = `${years} 年后的总价值`;
+            document.getElementById('totalAmount').textContent = formatCurrency(result.finalBalance);
+            document.getElementById('principalTotal').textContent = formatCurrency(result.totalPrincipal);
+            document.getElementById('interestTotal').textContent = formatCurrency(result.totalInterest);
+            document.getElementById('returnRate').textContent =
+                ((result.totalInterest / result.totalPrincipal) * 100).toFixed(2) + '%';
+
+            // 获取图表数据并绘制
+            const monthlyContribution = parseNumber(document.getElementById('monthlyContribution').value) || 0;
+            const dataList = getYearlyDataList(
+                result.totalPrincipal - monthlyContribution * years * 12,
+                monthlyContribution,
+                years,
+                rate,
+                variance
+            );
+
+            generateYearlyTable(dataList, rate, variance);
+
+            document.getElementById('resultsSection').classList.add('show');
+
+            // 延迟绘制图表以确保容器可见
+            setTimeout(() => {
+                drawChart(dataList, rate);
+
+                // 更新图例说明
+                const legendDesc = document.getElementById('legendDesc');
+                if (variance && variance > 0) {
+                    const belowRate = (rate - variance).toFixed(2);
+                    const aboveRate = (rate + variance).toFixed(2);
+                    legendDesc.innerHTML = `绿色: 方差低于 ${belowRate}% | 蓝色: 基准 ${rate.toFixed(2)}% | 红色: 方差高于 ${aboveRate}%`;
+                } else {
+                    legendDesc.innerHTML = `蓝色: 基准利率 ${rate.toFixed(2)}%`;
+                }
+            }, 100);
+        }
+
+        // 表单验证
+        function validateForm() {
+            let isValid = true;
+
+            const principal = parseNumber(document.getElementById('principal').value);
+            const principalError = document.getElementById('principalError');
+            if (!principal || principal <= 0) {
+                principalError.classList.add('show');
+                document.getElementById('principal').classList.add('has-error');
+                isValid = false;
+            } else {
+                principalError.classList.remove('show');
+                document.getElementById('principal').classList.remove('has-error');
+            }
+
+            const years = parseNumber(document.getElementById('years').value);
+            const yearsError = document.getElementById('yearsError');
+            if (!years || years <= 0) {
+                yearsError.classList.add('show');
+                document.getElementById('years').classList.add('has-error');
+                isValid = false;
+            } else {
+                yearsError.classList.remove('show');
+                document.getElementById('years').classList.remove('has-error');
+            }
+
+            const rate = parseNumber(document.getElementById('interestRate').value);
+            const rateError = document.getElementById('interestRateError');
+            if (rate === null || rate < 0) {
+                rateError.classList.add('show');
+                document.getElementById('interestRate').classList.add('has-error');
+                isValid = false;
+            } else {
+                rateError.classList.remove('show');
+                document.getElementById('interestRate').classList.remove('has-error');
+            }
+
+            return { isValid, principal, years, rate };
+        }
+
+        // 表单提交
+        document.getElementById('compoundForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const validation = validateForm();
+            if (!validation.isValid) return;
+
+            const monthlyContribution = parseNumber(document.getElementById('monthlyContribution').value) || 0;
+            const rateVariance = parseNumber(document.getElementById('rateVariance').value) || 0;
+            const compoundFrequency = parseInt(document.getElementById('compoundFrequency').value);
+
+            const result = calculateCompoundInterest(
+                validation.principal,
+                monthlyContribution,
+                validation.rate,
+                validation.years,
+                compoundFrequency
+            );
+
+            showResults(result, validation.years, validation.rate, rateVariance);
+        });
+
+        // 重置按钮
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            document.getElementById('compoundForm').reset();
+            document.getElementById('resultsSection').classList.remove('show');
+            document.querySelectorAll('.error-message').forEach(el => el.classList.remove('show'));
+            document.querySelectorAll('input').forEach(el => el.classList.remove('has-error'));
+        });
+
+        // 切换年度明细显示
+        document.getElementById('toggleDetails').addEventListener('click', function() {
+            const content = document.getElementById('detailsContent');
+            const toggle = this;
+            content.classList.toggle('show');
+            toggle.innerHTML = `<span>${content.classList.contains('show') ? '▲' : '▼'}</span> ${
+                content.classList.contains('show') ? '隐藏年度明细' : '显示年度明细'
+            }`;
+        });
+
+        // 输入时移除错误状态
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', function() {
+                this.classList.remove('has-error');
+                const errorId = this.id + 'Error';
+                const errorEl = document.getElementById(errorId);
+                if (errorEl) errorEl.classList.remove('show');
+            });
+        });
+
+        // 窗口大小变化时重绘图表
+        window.addEventListener('resize', function() {
+            if (chart) {
+                chart.resize();
+            }
+        });
+    </script>
+</body>
+</html>
