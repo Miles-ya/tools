@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base64 编码/解码</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 300;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .converter {
+            display: grid;
+            grid-template-columns: 1fr 40px 1fr;
+            gap: 15px;
+            align-items: start;
+        }
+
+        @media (max-width: 700px) {
+            .converter {
+                grid-template-columns: 1fr;
+            }
+            .arrow {
+                transform: rotate(90deg);
+                margin: 0 auto;
+            }
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            color: #8892b0;
+        }
+
+        .arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64ffda;
+            font-size: 1.5rem;
+            padding-top: 40px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            color: #fff;
+            font-size: 0.95rem;
+            font-family: 'Monaco', 'Consolas', monospace;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #64ffda;
+        }
+
+        textarea::placeholder {
+            color: #5a6a8a;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #64ffda;
+            color: #1a1a2e;
+        }
+
+        .btn-primary:hover {
+            background: #4dd4b4;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .info-bar {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #8892b0;
+        }
+
+        .info-item span {
+            color: #64ffda;
+            font-family: monospace;
+        }
+
+        .tips {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #5a6a8a;
+        }
+
+        .copy-hint {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #64ffda;
+            color: #1a1a2e;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .copy-hint.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Base64 编码/解码</h1>
+
+        <div class="converter">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">原文</span>
+                    <div class="btn-row">
+                        <button class="btn-secondary" onclick="clearInput()">清空</button>
+                    </div>
+                </div>
+                <textarea id="input" placeholder="输入要编码或解码的文本..."></textarea>
+                <div class="btn-row">
+                    <button class="btn-primary" onclick="encode()">编码 →</button>
+                </div>
+            </div>
+
+            <div class="arrow">⇄</div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Base64</span>
+                    <div class="btn-row">
+                        <button class="btn-secondary" onclick="copyOutput()">复制</button>
+                    </div>
+                </div>
+                <textarea id="output" placeholder="Base64 结果..." readonly></textarea>
+                <div class="btn-row">
+                    <button class="btn-primary" onclick="decode()">← 解码</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-bar">
+            <div class="info-item">
+                输入长度: <span id="inputLen">0</span> 字符
+            </div>
+            <div class="info-item">
+                输出长度: <span id="outputLen">0</span> 字符
+            </div>
+            <div class="info-item">
+                扩展比例: <span id="ratio">-</span>
+            </div>
+        </div>
+
+        <p class="tips">支持文本、URL、图片 Base64 互转</p>
+    </div>
+
+    <div class="copy-hint" id="copyHint">已复制到剪贴板</div>
+
+    <script>
+        const inputEl = document.getElementById('input');
+        const outputEl = document.getElementById('output');
+        const inputLenEl = document.getElementById('inputLen');
+        const outputLenEl = document.getElementById('outputLen');
+        const ratioEl = document.getElementById('ratio');
+
+        function updateStats() {
+            const inputLen = new Blob([inputEl.value]).size;
+            const outputLen = new Blob([outputEl.value]).size;
+            inputLenEl.textContent = inputLen;
+            outputLenEl.textContent = outputLen;
+            if (inputLen > 0) {
+                ratioEl.textContent = (outputLen / inputLen).toFixed(2) + 'x';
+            } else {
+                ratioEl.textContent = '-';
+            }
+        }
+
+        function encode() {
+            try {
+                const text = inputEl.value;
+                if (!text) return;
+                outputEl.value = btoa(unescape(encodeURIComponent(text)));
+                updateStats();
+            } catch (e) {
+                outputEl.value = '编码失败: ' + e.message;
+            }
+        }
+
+        function decode() {
+            try {
+                const text = outputEl.value.trim();
+                if (!text) return;
+                inputEl.value = decodeURIComponent(escape(atob(text)));
+                updateStats();
+            } catch (e) {
+                inputEl.value = '解码失败: 请确保输入是有效的 Base64 字符串';
+            }
+        }
+
+        function clearInput() {
+            inputEl.value = '';
+            outputEl.value = '';
+            updateStats();
+        }
+
+        function copyOutput() {
+            const text = outputEl.value;
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                const hint = document.getElementById('copyHint');
+                hint.classList.add('show');
+                setTimeout(() => hint.classList.remove('show'), 1500);
+            });
+        }
+
+        inputEl.addEventListener('input', updateStats);
+        outputEl.addEventListener('input', updateStats);
+
+        inputEl.addEventListener('paste', () => {
+            setTimeout(() => {
+                const text = inputEl.value;
+                if (/^[A-Za-z0-9+/]+={0,2}$/.test(text.trim())) {
+                    outputEl.value = text;
+                    updateStats();
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>

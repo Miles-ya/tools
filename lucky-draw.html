@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机抽签 - Lucky Draw</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 300;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+
+        .input-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            color: #fff;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #64ffda;
+        }
+
+        textarea::placeholder {
+            color: #8892b0;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #64ffda;
+            color: #1a1a2e;
+        }
+
+        .btn-primary:hover {
+            background: #4dd4b4;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .result-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 30px;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-text {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #64ffda;
+            z-index: 1;
+        }
+
+        .result-text.empty {
+            color: #8892b0;
+            font-weight: 400;
+            font-size: 1rem;
+        }
+
+        .animation {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, transparent 40%, rgba(100, 255, 218, 0.1) 50%, transparent 60%);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .settings {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .settings label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #8892b0;
+            font-size: 0.9rem;
+        }
+
+        input[type="number"] {
+            width: 70px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #64ffda;
+        }
+
+        .tips {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #5a6a8a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>随机抽签</h1>
+
+        <div class="input-section">
+            <textarea id="items" placeholder="每行输入一个选项&#10;例如：&#10;张三&#10;李四&#10;王五"></textarea>
+            <div class="btn-row">
+                <button class="btn-secondary" onclick="addExample()">示例</button>
+                <button class="btn-secondary" onclick="clearAll()">清空</button>
+            </div>
+        </div>
+
+        <div class="settings">
+            <label>
+                抽取数量:
+                <input type="number" id="count" value="1" min="1" max="100">
+            </label>
+            <label>
+                <input type="checkbox" id="unique" checked>
+                不重复抽取
+            </label>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn-primary" id="drawBtn" onclick="draw()">开始抽签</button>
+        </div>
+
+        <div class="result-box">
+            <div class="animation" id="anim" style="display:none;"></div>
+            <span class="result-text empty" id="result">输入选项后点击抽签</span>
+        </div>
+
+        <p class="tips">支持粘贴多条内容，用换行分隔</p>
+    </div>
+
+    <script>
+        let drawnItems = [];
+
+        function addExample() {
+            document.getElementById('items').value = '苹果\n香蕉\n橙子\n葡萄\n西瓜\n草莓\n芒果\n菠萝';
+        }
+
+        function clearAll() {
+            document.getElementById('items').value = '';
+            document.getElementById('result').textContent = '输入选项后点击抽签';
+            document.getElementById('result').className = 'result-text empty';
+            drawnItems = [];
+        }
+
+        function draw() {
+            const text = document.getElementById('items').value.trim();
+            if (!text) {
+                document.getElementById('result').textContent = '请先输入选项';
+                return;
+            }
+
+            const items = text.split('\n').filter(item => item.trim());
+            if (items.length === 0) {
+                document.getElementById('result').textContent = '请输入有效选项';
+                return;
+            }
+
+            const count = parseInt(document.getElementById('count').value) || 1;
+            const unique = document.getElementById('unique').checked;
+
+            if (unique && count > items.length) {
+                document.getElementById('result').textContent = '抽取数量不能超过选项总数';
+                return;
+            }
+
+            if (!unique) {
+                count = 1;
+            }
+
+            const btn = document.getElementById('drawBtn');
+            const resultEl = document.getElementById('result');
+            const anim = document.getElementById('anim');
+
+            btn.disabled = true;
+            anim.style.display = 'block';
+            resultEl.className = 'result-text';
+
+            let available = unique ? [...items] : items;
+            if (unique) {
+                drawnItems = [];
+            }
+
+            let animationInterval;
+            let displayCount = 0;
+
+            const finalResults = [];
+            for (let i = 0; i < count; i++) {
+                let pool = unique ? available : items;
+                const randomIndex = Math.floor(Math.random() * pool.length);
+                const selected = pool[randomIndex];
+                finalResults.push(selected);
+
+                if (unique) {
+                    available.splice(randomIndex, 1);
+                }
+            }
+
+            animationInterval = setInterval(() => {
+                const randomItem = items[Math.floor(Math.random() * items.length)];
+                resultEl.textContent = randomItem;
+            }, 80);
+
+            setTimeout(() => {
+                clearInterval(animationInterval);
+                anim.style.display = 'none';
+                btn.disabled = false;
+
+                if (count === 1) {
+                    resultEl.textContent = finalResults[0];
+                } else {
+                    resultEl.innerHTML = finalResults.map(item => `· ${item}`).join('<br>');
+                    if (unique) drawnItems = finalResults;
+                }
+            }, 1500);
+        }
+
+        document.getElementById('items').addEventListener('paste', (e) => {
+            setTimeout(() => {
+                drawnItems = [];
+            }, 100);
+        });
+    </script>
+</body>
+</html>
