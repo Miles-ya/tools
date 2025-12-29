@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片尺寸调整工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .upload-zone {
+            background: #fff;
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: #4299e1;
+            background: #ebf8ff;
+        }
+
+        .upload-zone p {
+            color: #718096;
+            margin-bottom: 10px;
+        }
+
+        .upload-zone .hint {
+            font-size: 0.85rem;
+            color: #a0aec0;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .controls {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            height: fit-content;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #718096;
+            margin-bottom: 6px;
+        }
+
+        .control-group input[type="number"],
+        .control-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .control-group input[type="number"]:focus,
+        .control-group select:focus {
+            border-color: #4299e1;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .row .control-group {
+            flex: 1;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            font-size: 0.9rem;
+            color: #4a5568;
+            cursor: pointer;
+        }
+
+        .slider-group {
+            margin-bottom: 15px;
+        }
+
+        .slider-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4299e1;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .slider-group input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .slider-value {
+            text-align: right;
+            font-size: 0.85rem;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #3182ce;
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .preview {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 20px;
+            overflow: auto;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .preview-title {
+            font-size: 0.95rem;
+            color: #4a5568;
+        }
+
+        .preview-info {
+            font-size: 0.85rem;
+            color: #a0aec0;
+        }
+
+        .preview-container {
+            text-align: center;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .preview-container img {
+            max-width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+        }
+
+        .placeholder {
+            color: #a0aec0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .size-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .preset-btn {
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #fff;
+            font-size: 0.8rem;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            border-color: #4299e1;
+            color: #4299e1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>图片尺寸调整工具</h1>
+
+        <div class="upload-zone" id="uploadZone">
+            <p>点击或拖拽图片到此处</p>
+            <p class="hint">支持 PNG、JPG、GIF、WebP | 也可 Ctrl+V 粘贴</p>
+        </div>
+
+        <div class="workspace hidden" id="workspace">
+            <div class="controls">
+                <div class="control-group">
+                    <label>常用尺寸</label>
+                    <div class="size-presets">
+                        <button class="preset-btn" data-width="1920" data-height="1080">1080p</button>
+                        <button class="preset-btn" data-width="1280" data-height="720">720p</button>
+                        <button class="preset-btn" data-width="800" data-height="600">800×600</button>
+                        <button class="preset-btn" data-width="400" data-height="300">400×300</button>
+                        <button class="preset-btn" data-width="200" data-height="200">200×200</button>
+                        <button class="preset-btn" data-width="100" data-height="100">100×100</button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="control-group">
+                        <label>宽度 (px)</label>
+                        <input type="number" id="targetWidth" value="800" min="1" max="10000">
+                    </div>
+                    <div class="control-group">
+                        <label>高度 (px)</label>
+                        <input type="number" id="targetHeight" value="600" min="1" max="10000">
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="maintainRatio" checked>
+                    <label for="maintainRatio">保持宽高比</label>
+                </div>
+
+                <div class="slider-group">
+                    <label>缩放比例</label>
+                    <input type="range" id="scaleSlider" min="5" max="200" value="100">
+                    <div class="slider-value"><span id="scaleValue">100</span>%</div>
+                </div>
+
+                <div class="control-group">
+                    <label>输出格式</label>
+                    <select id="outputFormat">
+                        <option value="image/png">PNG</option>
+                        <option value="image/jpeg">JPEG</option>
+                        <option value="image/webp">WebP</option>
+                    </select>
+                </div>
+
+                <div class="slider-group" id="qualityGroup">
+                    <label>输出质量</label>
+                    <input type="range" id="qualitySlider" min="10" max="100" value="90">
+                    <div class="slider-value"><span id="qualityValue">90</span>%</div>
+                </div>
+
+                <button class="btn btn-primary" id="applyBtn">应用调整</button>
+                <button class="btn btn-secondary" id="downloadBtn">下载图片</button>
+                <button class="btn btn-secondary" id="resetBtn">重新选择</button>
+            </div>
+
+            <div class="preview">
+                <div class="preview-header">
+                    <span class="preview-title">预览</span>
+                    <span class="preview-info" id="previewInfo"></span>
+                </div>
+                <div class="preview-container" id="previewContainer">
+                    <img id="previewImg" src="" alt="Preview">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const workspace = document.getElementById('workspace');
+        const targetWidth = document.getElementById('targetWidth');
+        const targetHeight = document.getElementById('targetHeight');
+        const maintainRatio = document.getElementById('maintainRatio');
+        const scaleSlider = document.getElementById('scaleSlider');
+        const scaleValue = document.getElementById('scaleValue');
+        const outputFormat = document.getElementById('outputFormat');
+        const qualitySlider = document.getElementById('qualitySlider');
+        const qualityValue = document.getElementById('qualityValue');
+        const qualityGroup = document.getElementById('qualityGroup');
+        const previewImg = document.getElementById('previewImg');
+        const previewInfo = document.getElementById('previewInfo');
+        const previewContainer = document.getElementById('previewContainer');
+
+        let originalImage = null;
+        let originalWidth = 0;
+        let originalHeight = 0;
+        let aspectRatio = 0;
+
+        // 隐藏质量控制（仅JPEG/WebP需要）
+        function updateQualityVisibility() {
+            const format = outputFormat.value;
+            qualityGroup.style.display = format === 'image/png' ? 'none' : 'block';
+        }
+        outputFormat.addEventListener('change', updateQualityVisibility);
+        updateQualityVisibility();
+
+        // 文件输入
+        uploadZone.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                if (e.target.files[0]) loadImage(e.target.files[0]);
+            };
+            input.click();
+        });
+
+        // 拖拽
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                loadImage(file);
+            }
+        });
+
+        // 粘贴
+        document.addEventListener('paste', (e) => {
+            const items = e.clipboardData.items;
+            for (let item of items) {
+                if (item.type.startsWith('image/')) {
+                    const file = item.getAsFile();
+                    loadImage(file);
+                    break;
+                }
+            }
+        });
+
+        function loadImage(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    originalImage = img;
+                    originalWidth = img.width;
+                    originalHeight = img.height;
+                    aspectRatio = originalWidth / originalHeight;
+
+                    previewImg.src = e.target.result;
+                    previewInfo.textContent = `原始: ${originalWidth} × ${originalHeight}`;
+
+                    // 初始设置目标尺寸
+                    targetWidth.value = originalWidth;
+                    targetHeight.value = originalHeight;
+                    scaleSlider.value = 100;
+
+                    uploadZone.classList.add('hidden');
+                    workspace.classList.remove('hidden');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 保持宽高比
+        let isUpdatingFromWidth = false;
+        targetWidth.addEventListener('input', () => {
+            if (maintainRatio.checked && originalImage) {
+                isUpdatingFromWidth = true;
+                targetHeight.value = Math.round(targetWidth.value / aspectRatio);
+            }
+        });
+
+        targetHeight.addEventListener('input', () => {
+            if (maintainRatio.checked && originalImage) {
+                isUpdatingFromWidth = false;
+                targetWidth.value = Math.round(targetHeight.value * aspectRatio);
+            }
+        });
+
+        // 缩放滑块
+        scaleSlider.addEventListener('input', () => {
+            const scale = scaleSlider.value / 100;
+            scaleValue.textContent = scaleSlider.value;
+
+            const newWidth = Math.round(originalWidth * scale);
+            const newHeight = Math.round(originalHeight * scale);
+
+            targetWidth.value = newWidth;
+            targetHeight.value = newHeight;
+        });
+
+        // 质量滑块
+        qualitySlider.addEventListener('input', () => {
+            qualityValue.textContent = qualitySlider.value;
+        });
+
+        // 预设尺寸
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                targetWidth.value = btn.dataset.width;
+                targetHeight.value = btn.dataset.height;
+                scaleSlider.value = 100;
+            });
+        });
+
+        // 应用调整
+        document.getElementById('applyBtn').addEventListener('click', () => {
+            if (!originalImage) return;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = parseInt(targetWidth.value);
+            canvas.height = parseInt(targetHeight.value);
+
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+
+            const format = outputFormat.value;
+            const quality = qualitySlider.value / 100;
+            const dataUrl = canvas.toDataURL(format, quality);
+
+            previewImg.src = dataUrl;
+            previewInfo.textContent = `调整后: ${canvas.width} × ${canvas.height}`;
+        });
+
+        // 下载
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            if (!previewImg.src) return;
+
+            const ext = outputFormat.value.split('/')[1];
+            const link = document.createElement('a');
+            link.download = `resized_image.${ext}`;
+            link.href = previewImg.src;
+            link.click();
+        });
+
+        // 重置
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            originalImage = null;
+            previewImg.src = '';
+            previewInfo.textContent = '';
+            uploadZone.classList.remove('hidden');
+            workspace.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
