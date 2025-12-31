@@ -3,56 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>复利计算器 | Investor Tools</title>
-    <!-- ECharts CDN -->
+    <title>复利计算器</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
-        * {
+        /* ========================================
+           Light Theme Variables
+           ======================================== */
+        :root {
+            --color-dark: #141413;
+            --color-light: #faf9f5;
+            --color-mid: #b0aea5;
+            --color-orange: #d97757;
+            --color-blue: #6a9bcc;
+            --color-green: #788c5d;
+            --bg-primary: var(--color-light);
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-input: #f0eeea;
+            --text-primary: var(--color-dark);
+            --text-secondary: #5a5a52;
+            --text-muted: #8a8a7e;
+            --accent: var(--color-orange);
+            --accent-hover: #c86a4a;
+            --accent-blue: var(--color-blue);
+            --accent-green: var(--color-green);
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+        }
+
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        :root {
-            --primary-color: #005ea2;
-            --primary-dark: #1a4480;
-            --secondary-color: #565c65;
-            --bg-light: #f0f0f0;
-            --bg-white: #ffffff;
-            --border-color: #dfe1e2;
-            --success-color: #00a91c;
-            --warning-color: #e5a000;
-            --text-primary: #1b1b1b;
-            --text-secondary: #565c65;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-light);
+            font-family: 'Lora', Georgia, serif;
+            background: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.6;
-            padding: 20px;
+            padding: var(--space-lg);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Poppins', Arial, sans-serif;
+            font-weight: 500;
+            line-height: 1.3;
         }
 
         .container {
             max-width: 700px;
             margin: 0 auto;
-            background: var(--bg-white);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
             overflow: hidden;
+            border: 1px solid rgba(20, 20, 19, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
+        /* Header */
         header {
-            background: var(--primary-color);
-            color: white;
-            padding: 24px 32px;
+            background: var(--accent);
+            color: var(--color-light);
+            padding: var(--space-lg) var(--space-xl);
         }
 
         header h1 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 8px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: var(--space-xs);
         }
 
         header p {
@@ -61,42 +89,45 @@
         }
 
         .required-note {
-            background: #fff3cd;
-            padding: 12px 24px;
-            font-size: 0.875rem;
-            color: #856404;
-            border-bottom: 1px solid var(--border-color);
+            background: rgba(217, 119, 87, 0.1);
+            padding: var(--space-sm) var(--space-lg);
+            font-size: 0.85rem;
+            color: var(--accent);
+            border-bottom: 1px solid rgba(20, 20, 19, 0.08);
         }
 
         .required-note strong span {
-            color: #d32f2f;
+            color: var(--accent-red);
         }
 
+        /* Form */
         .calculator-form {
-            padding: 24px;
+            padding: var(--space-lg);
         }
 
         .step {
-            margin-bottom: 32px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid var(--border-color);
+            margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-lg);
+            border-bottom: 1px solid rgba(176, 174, 165, 0.1);
         }
 
         .step:last-of-type {
             border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
         }
 
         .step h3 {
-            font-size: 1.1rem;
-            color: var(--primary-color);
-            margin-bottom: 16px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid var(--primary-color);
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: var(--space-md);
+            padding-bottom: var(--space-sm);
+            border-bottom: 2px solid var(--accent);
             display: inline-block;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: var(--space-md);
         }
 
         .form-group:last-child {
@@ -105,13 +136,13 @@
 
         label {
             display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
+            font-weight: 500;
+            margin-bottom: var(--space-sm);
             color: var(--text-primary);
         }
 
         label .required {
-            color: #d32f2f;
+            color: var(--accent-red);
         }
 
         input[type="text"],
@@ -121,71 +152,74 @@
             max-width: 280px;
             padding: 12px 16px;
             font-size: 1rem;
-            border: 2px solid var(--border-color);
-            border-radius: 4px;
-            transition: all 0.2s ease;
-            background: var(--bg-white);
+            background: var(--bg-input);
+            border: 1px solid rgba(176, 174, 165, 0.2);
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-fast);
+            color: var(--text-primary);
+            font-family: inherit;
         }
 
         input[type="text"]:focus,
         input[type="number"]:focus,
         select:focus {
             outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(0, 94, 162, 0.15);
+            border-color: var(--accent);
         }
 
         input.has-error {
-            border-color: #d32f2f;
+            border-color: var(--accent-red);
         }
 
         .help-text {
             font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-top: 6px;
+            color: var(--text-muted);
+            margin-top: var(--space-xs);
         }
 
         .button-group {
             display: flex;
-            gap: 12px;
-            margin-top: 24px;
+            gap: var(--space-md);
+            margin-top: var(--space-lg);
         }
 
         button {
-            padding: 14px 28px;
+            padding: 12px 28px;
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: 500;
             border: none;
-            border-radius: 4px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all var(--transition-fast);
+            font-family: inherit;
         }
 
         .btn-primary {
-            background: var(--primary-color);
-            color: white;
+            background: var(--accent);
+            color: var(--color-light);
         }
 
         .btn-primary:hover {
-            background: var(--primary-dark);
+            background: var(--accent-hover);
             transform: translateY(-1px);
         }
 
         .btn-secondary {
-            background: var(--bg-light);
+            background: rgba(255, 255, 255, 0.08);
             color: var(--text-primary);
-            border: 2px solid var(--border-color);
+            border: 1px solid rgba(176, 174, 165, 0.2);
         }
 
         .btn-secondary:hover {
-            background: #e0e0e0;
+            background: rgba(255, 255, 255, 0.15);
         }
 
+        /* Results */
         .results-section {
             display: none;
-            padding: 24px;
-            background: #f8f9fa;
-            border-top: 3px solid var(--primary-color);
+            padding: var(--space-lg);
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 3px solid var(--accent);
             animation: fadeIn 0.3s ease;
         }
 
@@ -199,127 +233,105 @@
         }
 
         .results-summary {
-            background: var(--primary-color);
-            color: white;
-            padding: 24px;
-            border-radius: 8px;
+            background: var(--accent);
+            color: var(--color-light);
+            padding: var(--space-lg);
+            border-radius: var(--radius-md);
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: var(--space-lg);
         }
 
         .results-summary h2 {
             font-size: 0.95rem;
-            font-weight: 500;
+            font-weight: 400;
             opacity: 0.9;
-            margin-bottom: 8px;
+            margin-bottom: var(--space-sm);
         }
 
         .results-summary .amount {
             font-size: 2.5rem;
             font-weight: 700;
+            font-family: 'Poppins', Arial, sans-serif;
         }
 
         .breakdown {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+        }
+
+        @media (max-width: 500px) {
+            .breakdown {
+                grid-template-columns: 1fr;
+            }
         }
 
         .breakdown-item {
-            background: white;
-            padding: 16px;
-            border-radius: 8px;
+            background: var(--bg-card);
+            padding: var(--space-md);
+            border-radius: var(--radius-md);
             text-align: center;
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(176, 174, 165, 0.15);
         }
 
         .breakdown-item .label {
             font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
+            color: var(--text-muted);
+            margin-bottom: var(--space-xs);
         }
 
         .breakdown-item .value {
             font-size: 1.1rem;
             font-weight: 600;
+            font-family: 'Poppins', Arial, sans-serif;
         }
 
         .breakdown-item.principal .value {
-            color: var(--secondary-color);
+            color: var(--text-secondary);
         }
 
         .breakdown-item.interest .value {
-            color: var(--success-color);
+            color: var(--accent-green);
         }
 
+        /* Chart */
         .chart-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 24px;
+            background: var(--bg-card);
+            padding: var(--space-md);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(176, 174, 165, 0.15);
+            margin-bottom: var(--space-lg);
         }
 
         .chart-title {
             font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 16px;
+            font-weight: 500;
+            margin-bottom: var(--space-md);
             text-align: center;
         }
 
         #growthChart {
             width: 100%;
-            height: 350px;
+            height: 300px;
         }
 
-        .disclaimer {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            padding: 16px;
-            background: #fff3cd;
-            border-radius: 4px;
-            border-left: 4px solid var(--warning-color);
-        }
-
-        .yearly-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 16px;
-            font-size: 0.9rem;
-        }
-
-        .yearly-table th,
-        .yearly-table td {
-            padding: 10px 12px;
-            text-align: right;
-            border: 1px solid var(--border-color);
-        }
-
-        .yearly-table th {
-            background: var(--bg-light);
-            font-weight: 600;
-            text-align: center;
-        }
-
-        .yearly-table tr:nth-child(even) {
-            background: #f8f9fa;
-        }
-
+        /* Table */
         .yearly-section {
-            margin-top: 24px;
+            margin-top: var(--space-lg);
         }
 
         .toggle-details {
             background: none;
             border: none;
-            color: var(--primary-color);
+            color: var(--accent);
             cursor: pointer;
             font-size: 0.9rem;
-            padding: 8px 0;
+            padding: var(--space-sm) 0;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: var(--space-xs);
+            font-family: inherit;
         }
 
         .toggle-details:hover {
@@ -334,10 +346,35 @@
             display: block;
         }
 
+        .yearly-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: var(--space-md);
+            font-size: 0.9rem;
+        }
+
+        .yearly-table th,
+        .yearly-table td {
+            padding: 10px 12px;
+            text-align: right;
+            border: 1px solid rgba(176, 174, 165, 0.15);
+        }
+
+        .yearly-table th {
+            background: var(--bg-input);
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .yearly-table tr:nth-child(even) {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Error Message */
         .error-message {
-            color: #d32f2f;
+            color: var(--accent-red);
             font-size: 0.85rem;
-            margin-top: 6px;
+            margin-top: var(--space-xs);
             display: none;
         }
 
@@ -345,22 +382,15 @@
             display: block;
         }
 
-        @media (max-width: 600px) {
-            .breakdown {
-                grid-template-columns: 1fr;
-            }
-
-            .button-group {
-                flex-direction: column;
-            }
-
-            button {
-                width: 100%;
-            }
-
-            .results-summary .amount {
-                font-size: 1.8rem;
-            }
+        /* Disclaimer */
+        .disclaimer {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            padding: var(--space-md);
+            background: rgba(217, 119, 87, 0.1);
+            border-radius: var(--radius-sm);
+            border-left: 3px solid var(--accent);
+            margin-top: var(--space-lg);
         }
     </style>
 </head>
@@ -461,7 +491,6 @@
             <div class="chart-container">
                 <div class="chart-title">资金增长趋势</div>
                 <div id="growthChart"></div>
-
             </div>
 
             <div class="yearly-section">
@@ -482,17 +511,15 @@
                 </div>
             </div>
 
-            <div class="disclaimer" style="margin-top: 24px;">
+            <div class="disclaimer">
                 <strong>免责声明：</strong>此计算器仅供参考，不构成投资建议。实际投资表现可能与计算结果不同。请咨询专业的理财顾问做出投资决策。
             </div>
         </div>
     </div>
 
     <script>
-        // ECharts 实例
         let chart = null;
 
-        // 格式化货币
         function formatCurrency(value) {
             return new Intl.NumberFormat('zh-CN', {
                 style: 'currency',
@@ -502,13 +529,11 @@
             }).format(value);
         }
 
-        // 解析输入为数字
         function parseNumber(str) {
             const num = parseFloat(str.replace(/[^\d.-]/g, ''));
             return isNaN(num) ? null : num;
         }
 
-        // 复利计算（带定期供款）
         function calculateCompoundInterest(principal, monthlyContribution, annualRate, years, compoundFrequency) {
             const monthlyRate = annualRate / 100 / 12;
             const months = years * 12;
@@ -520,7 +545,6 @@
                 balance = balance * (1 + monthlyRate) + monthlyContribution;
                 totalPrincipal += monthlyContribution;
 
-                // 每年记录一次
                 if (month % 12 === 0) {
                     results.push({
                         year: month / 12,
@@ -539,19 +563,15 @@
             };
         }
 
-        // 绘制增长图表 (ECharts)
-        function drawChart(dataList, baseRate) {
+        function drawChart(dataList) {
             const chartDom = document.getElementById('growthChart');
 
             if (!chart) {
                 chart = echarts.init(chartDom);
             }
 
-            // dataList 是数组，元素是 {rate, data: [...]}
-            // X轴标签
             const years = dataList[0].data.map(d => `第${d.year}年`);
 
-            // 构建系列数据
             const series = dataList.map((item) => {
                 const balances = item.data.map(d => d.balance);
                 return {
@@ -561,33 +581,23 @@
                     smooth: true,
                     symbol: 'circle',
                     symbolSize: 6,
-                    lineStyle: {
-                        width: 2
-                    },
-                    markLine: {
-                        silent: true
-                    },
-                    emphasis: {
-                        focus: 'series'
-                    }
+                    lineStyle: { width: 2 },
+                    markLine: { silent: true },
+                    emphasis: { focus: 'series' }
                 };
             });
 
-            // 根据线条数量设置不同颜色
-            const colors = ['#00a91c', '#005ea2', '#d32f2f'];
+            const colors = ['#788c5d', '#d97757', '#c94a4a'];
             series.forEach((s, i) => {
-                s.itemStyle = { color: colors[i] || '#565c65' };
+                s.itemStyle = { color: colors[i] || '#6e6d69' };
             });
 
-            // 生成图例
             const legendData = series.map(s => s.name);
 
             const option = {
                 tooltip: {
                     trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    },
+                    axisPointer: { type: 'cross' },
                     formatter: function(params) {
                         let result = params[0].axisValue + '<br/>';
                         params.forEach(param => {
@@ -598,7 +608,8 @@
                 },
                 legend: {
                     data: legendData,
-                    bottom: 0
+                    bottom: 0,
+                    textStyle: { color: '#b0aea5' }
                 },
                 grid: {
                     left: '3%',
@@ -610,7 +621,9 @@
                 xAxis: {
                     type: 'category',
                     boundaryGap: false,
-                    data: years
+                    data: years,
+                    axisLine: { lineStyle: { color: '#6e6d69' } },
+                    axisLabel: { color: '#b0aea5' }
                 },
                 yAxis: {
                     type: 'value',
@@ -620,8 +633,10 @@
                                 return (value / 10000) + '万';
                             }
                             return value;
-                        }
-                    }
+                        },
+                        color: '#b0aea5'
+                    },
+                    splitLine: { lineStyle: { color: 'rgba(176, 174, 165, 0.1)' } }
                 },
                 series: series
             };
@@ -629,19 +644,16 @@
             chart.setOption(option, true);
         }
 
-        // 获取不同利率的年度数据
         function getYearlyDataList(principal, monthlyContribution, years, baseRate, variance) {
             const list = [];
 
             if (variance && variance > 0) {
-                // 三条线：低、基准、高利率
                 const rates = [baseRate - variance, baseRate, baseRate + variance].filter(r => r > 0);
                 rates.forEach(rate => {
                     const result = calculateCompoundInterest(principal, monthlyContribution, rate, years, 12);
                     list.push({ rate, data: result.yearlyData });
                 });
             } else {
-                // 只有基准利率
                 const result = calculateCompoundInterest(principal, monthlyContribution, baseRate, years, 12);
                 list.push({ rate: baseRate, data: result.yearlyData });
             }
@@ -649,18 +661,16 @@
             return list;
         }
 
-        // 生成年度明细表格
         function generateYearlyTable(dataList, baseRate, variance) {
             const tbody = document.getElementById('yearlyBody');
             const thead = document.getElementById('yearlyHead');
             tbody.innerHTML = '';
 
             const hasVariance = variance && variance > 0;
-            const aboveRate = baseRate + variance;
-            const belowRate = baseRate - variance;
 
             if (hasVariance) {
-                // 四列表头：上方 > 基准值 > 下方
+                const aboveRate = baseRate + variance;
+                const belowRate = baseRate - variance;
                 thead.innerHTML = `
                     <tr>
                         <th>年份</th>
@@ -681,7 +691,6 @@
                     tbody.appendChild(row);
                 });
             } else {
-                // 三列表头
                 thead.innerHTML = `
                     <tr>
                         <th>年份</th>
@@ -703,7 +712,6 @@
             }
         }
 
-        // 显示结果
         function showResults(result, years, rate, variance) {
             document.getElementById('yearsLabel').textContent = `${years} 年后的总价值`;
             document.getElementById('totalAmount').textContent = formatCurrency(result.finalBalance);
@@ -712,7 +720,6 @@
             document.getElementById('returnRate').textContent =
                 ((result.totalInterest / result.totalPrincipal) * 100).toFixed(2) + '%';
 
-            // 获取图表数据并绘制
             const monthlyContribution = parseNumber(document.getElementById('monthlyContribution').value) || 0;
             const dataList = getYearlyDataList(
                 result.totalPrincipal - monthlyContribution * years * 12,
@@ -726,23 +733,11 @@
 
             document.getElementById('resultsSection').classList.add('show');
 
-            // 延迟绘制图表以确保容器可见
             setTimeout(() => {
-                drawChart(dataList, rate);
-
-                // 更新图例说明
-                const legendDesc = document.getElementById('legendDesc');
-                if (variance && variance > 0) {
-                    const belowRate = (rate - variance).toFixed(2);
-                    const aboveRate = (rate + variance).toFixed(2);
-                    legendDesc.innerHTML = `绿色: 方差低于 ${belowRate}% | 蓝色: 基准 ${rate.toFixed(2)}% | 红色: 方差高于 ${aboveRate}%`;
-                } else {
-                    legendDesc.innerHTML = `蓝色: 基准利率 ${rate.toFixed(2)}%`;
-                }
+                drawChart(dataList);
             }, 100);
         }
 
-        // 表单验证
         function validateForm() {
             let isValid = true;
 
@@ -782,7 +777,6 @@
             return { isValid, principal, years, rate };
         }
 
-        // 表单提交
         document.getElementById('compoundForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -804,7 +798,6 @@
             showResults(result, validation.years, validation.rate, rateVariance);
         });
 
-        // 重置按钮
         document.getElementById('resetBtn').addEventListener('click', function() {
             document.getElementById('compoundForm').reset();
             document.getElementById('resultsSection').classList.remove('show');
@@ -812,7 +805,6 @@
             document.querySelectorAll('input').forEach(el => el.classList.remove('has-error'));
         });
 
-        // 切换年度明细显示
         document.getElementById('toggleDetails').addEventListener('click', function() {
             const content = document.getElementById('detailsContent');
             const toggle = this;
@@ -822,7 +814,6 @@
             }`;
         });
 
-        // 输入时移除错误状态
         document.querySelectorAll('input').forEach(input => {
             input.addEventListener('input', function() {
                 this.classList.remove('has-error');
@@ -832,7 +823,6 @@
             });
         });
 
-        // 窗口大小变化时重绘图表
         window.addEventListener('resize', function() {
             if (chart) {
                 chart.resize();

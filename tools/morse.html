@@ -1,485 +1,565 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>莫斯电码</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>莫尔斯电码</title>
+    <style>
+        /* ========================================
+           Light Theme Variables
+           ======================================== */
+        :root {
+            --color-dark: #141413;
+            --color-light: #faf9f5;
+            --color-mid: #b0aea5;
+            --color-orange: #d97757;
+            --color-blue: #6a9bcc;
+            --color-green: #788c5d;
+            --bg-primary: var(--color-light);
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-input: #f0eeea;
+            --text-primary: var(--color-dark);
+            --text-secondary: #5a5a52;
+            --text-muted: #8a8a7e;
+            --accent: var(--color-orange);
+            --accent-hover: #c86a4a;
+            --accent-blue: var(--color-blue);
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #1a1a2e;
-      color: #eee;
-      min-height: 100vh;
-    }
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 2rem;
-    }
+        body {
+            font-family: 'Lora', Georgia, serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            padding: var(--space-xl) var(--space-lg);
+        }
 
-    h1 {
-      font-size: 2rem;
-      font-weight: 300;
-      margin-bottom: 2rem;
-      text-align: center;
-    }
+        h1, h2, h3 {
+            font-family: 'Poppins', Arial, sans-serif;
+            font-weight: 500;
+            line-height: 1.3;
+        }
 
-    .tabs {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      justify-content: center;
-    }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
 
-    .tab {
-      padding: 0.75rem 1.5rem;
-      background: #16213e;
-      border: 2px solid #333;
-      color: #888;
-      border-radius: 2rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
+        header {
+            text-align: center;
+            margin-bottom: var(--space-xl);
+        }
 
-    .tab:hover {
-      border-color: #4ecdc4;
-    }
+        header h1 {
+            font-size: 1.8rem;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
 
-    .tab.active {
-      background: #4ecdc4;
-      border-color: #4ecdc4;
-      color: #1a1a2e;
-    }
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-style: italic;
+            margin-top: var(--space-xs);
+        }
 
-    .panel {
-      display: none;
-      background: #16213e;
-      border-radius: 1rem;
-      padding: 2rem;
-    }
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-xl);
+            justify-content: center;
+        }
 
-    .panel.active {
-      display: block;
-    }
+        .tab {
+            padding: 10px 24px;
+            background: var(--bg-card);
+            border: 1px solid rgba(20, 20, 19, 0.1);
+            color: var(--text-secondary);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
 
-    .panel h2 {
-      font-size: 1.2rem;
-      font-weight: 400;
-      margin-bottom: 1.5rem;
-      color: #888;
-    }
+        .tab:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
 
-    textarea {
-      width: 100%;
-      height: 150px;
-      background: #0d1117;
-      border: 1px solid #333;
-      border-radius: 0.5rem;
-      padding: 1rem;
-      color: #eee;
-      font-size: 1.1rem;
-      font-family: 'Consolas', monospace;
-      resize: vertical;
-      outline: none;
-      transition: border-color 0.2s;
-    }
+        .tab.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--color-light);
+        }
 
-    textarea:focus {
-      border-color: #4ecdc4;
-    }
+        /* Panel */
+        .panel {
+            display: none;
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            border: 1px solid rgba(20, 20, 19, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
 
-    .controls {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1rem;
-      flex-wrap: wrap;
-    }
+        .panel.active {
+            display: block;
+        }
 
-    .btn {
-      padding: 0.75rem 1.5rem;
-      border-radius: 2rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      border: none;
-      font-size: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+        .panel h2 {
+            font-size: 1.1rem;
+            font-weight: 400;
+            margin-bottom: var(--space-lg);
+            color: var(--text-secondary);
+        }
 
-    .btn-primary {
-      background: #4ecdc4;
-      color: #1a1a2e;
-    }
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: var(--bg-input);
+            border: 1px solid rgba(20, 20, 19, 0.1);
+            border-radius: var(--radius-sm);
+            padding: var(--space-md);
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: 'Consolas', monospace;
+            resize: vertical;
+            outline: none;
+            transition: border-color var(--transition-fast);
+        }
 
-    .btn-primary:hover {
-      background: #3dbdb5;
-    }
+        textarea:focus {
+            border-color: var(--accent);
+        }
 
-    .btn-secondary {
-      background: transparent;
-      border: 2px solid #4ecdc4;
-      color: #4ecdc4;
-    }
+        .controls {
+            display: flex;
+            gap: var(--space-sm);
+            margin-top: var(--space-md);
+            flex-wrap: wrap;
+        }
 
-    .btn-secondary:hover {
-      background: #4ecdc4;
-      color: #1a1a2e;
-    }
+        .btn {
+            padding: 10px 24px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            border: none;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            font-family: inherit;
+            font-weight: 500;
+        }
 
-    .btn-stop {
-      background: #ff6b6b;
-      color: #fff;
-    }
+        .btn-primary {
+            background: var(--accent);
+            color: var(--color-light);
+        }
 
-    .output-box {
-      background: #0d1117;
-      border-radius: 0.5rem;
-      padding: 1rem;
-      margin-top: 1rem;
-      font-family: 'Consolas', monospace;
-      font-size: 1.2rem;
-      letter-spacing: 2px;
-      min-height: 60px;
-      word-break: break-all;
-    }
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
 
-    .visualizer {
-      margin-top: 1.5rem;
-      text-align: center;
-    }
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
 
-    #signalLight {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      background: #333;
-      margin: 0 auto 1rem;
-      transition: all 0.05s;
-      box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
-    }
+        .btn-secondary:hover {
+            background: var(--accent);
+            color: var(--color-light);
+        }
 
-    #signalLight.on {
-      background: #fff;
-      box-shadow: 0 0 60px #fff, 0 0 100px #4ecdc4;
-    }
+        .btn-stop {
+            background: #c94a4a;
+            color: var(--color-light);
+        }
 
-    #signalStatus {
-      color: #888;
-      font-size: 0.9rem;
-    }
+        .btn-stop:hover {
+            background: #b33a3a;
+        }
 
-    .speed-control {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-top: 1rem;
-      color: #888;
-    }
+        .output-box {
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
+            padding: var(--space-md);
+            margin-top: var(--space-md);
+            font-family: 'Consolas', monospace;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            min-height: 60px;
+            word-break: break-all;
+        }
 
-    .speed-control input {
-      flex: 1;
-    }
+        /* Visualizer */
+        .visualizer {
+            margin-top: var(--space-xl);
+            text-align: center;
+        }
 
-    .cheatsheet {
-      margin-top: 2rem;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 0.5rem;
-    }
+        #signalLight {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #333;
+            margin: 0 auto var(--space-md);
+            transition: all 0.05s;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
 
-    .cheat-item {
-      background: #0d1117;
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-      text-align: center;
-      font-family: 'Consolas', monospace;
-    }
+        #signalLight.on {
+            background: var(--color-light);
+            box-shadow: 0 0 40px var(--color-light), 0 0 80px var(--accent);
+        }
 
-    .cheat-char {
-      font-size: 1.2rem;
-      color: #4ecdc4;
-      margin-bottom: 0.25rem;
-    }
+        #signalStatus {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
 
-    .cheat-code {
-      font-size: 0.9rem;
-      color: #888;
-    }
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-top: var(--space-md);
+            color: var(--text-secondary);
+        }
 
-    .copy-btn {
-      margin-top: 0.5rem;
-      padding: 0.25rem 0.75rem;
-      background: #333;
-      border: none;
-      border-radius: 1rem;
-      color: #888;
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
+        .speed-control input[type="range"] {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            background: var(--bg-input);
+            border-radius: 3px;
+        }
 
-    .copy-btn:hover {
-      background: #4ecdc4;
-      color: #1a1a2e;
-    }
-  </style>
+        .speed-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Cheatsheet */
+        .cheatsheet {
+            margin-top: var(--space-xl);
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: var(--space-sm);
+        }
+
+        .cheat-item {
+            background: var(--bg-input);
+            padding: var(--space-sm);
+            border-radius: var(--radius-sm);
+            text-align: center;
+            font-family: 'Consolas', monospace;
+        }
+
+        .cheat-char {
+            font-size: 1.1rem;
+            color: var(--accent);
+            margin-bottom: var(--space-xs);
+        }
+
+        .cheat-code {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .copy-btn {
+            margin-top: var(--space-sm);
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            border-radius: 12px;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .copy-btn:hover {
+            background: var(--accent);
+            color: var(--color-light);
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>莫斯电码</h1>
+    <div class="container">
+        <header>
+            <h1>莫尔斯电码</h1>
+            <p class="subtitle">编码、解码与播放</p>
+        </header>
 
-    <div class="tabs">
-      <button class="tab active" data-tab="encode">编码</button>
-      <button class="tab" data-tab="decode">解码</button>
-      <button class="tab" data-tab="play">播放</button>
+        <div class="tabs">
+            <button class="tab active" data-tab="encode">编码</button>
+            <button class="tab" data-tab="decode">解码</button>
+            <button class="tab" data-tab="play">播放</button>
+        </div>
+
+        <!-- Encode Panel -->
+        <div class="panel active" id="encodePanel">
+            <h2>文本 → 莫尔斯电码</h2>
+            <textarea id="encodeInput" placeholder="输入要转换的文本..."></textarea>
+            <div class="controls">
+                <button class="btn btn-primary" id="encodeBtn">转换</button>
+                <button class="btn btn-secondary" id="copyEncode">复制结果</button>
+            </div>
+            <div class="output-box" id="encodeOutput">结果将显示在这里</div>
+        </div>
+
+        <!-- Decode Panel -->
+        <div class="panel" id="decodePanel">
+            <h2>莫尔斯电码 → 文本</h2>
+            <textarea id="decodeInput" placeholder="输入莫尔斯电码 (用 . 表示短信号, - 表示长信号, 空格分隔字符, / 表示空格)"></textarea>
+            <div class="controls">
+                <button class="btn btn-primary" id="decodeBtn">转换</button>
+                <button class="btn btn-secondary" id="copyDecode">复制结果</button>
+            </div>
+            <div class="output-box" id="decodeOutput">结果将显示在这里</div>
+
+            <div class="speed-control">
+                <span>WPM:</span>
+                <input type="range" id="wpmSlider" min="5" max="40" value="20">
+                <span id="wpmValue">20</span>
+            </div>
+        </div>
+
+        <!-- Play Panel -->
+        <div class="panel" id="playPanel">
+            <h2>发送莫尔斯电码</h2>
+            <textarea id="playInput" placeholder="输入要播放的莫尔斯电码或文本..."></textarea>
+            <div class="controls">
+                <button class="btn btn-primary" id="playBtn">播放</button>
+                <button class="btn btn-stop" id="stopPlayBtn" style="display:none;">停止</button>
+            </div>
+
+            <div class="visualizer">
+                <div id="signalLight"></div>
+                <div id="signalStatus">准备</div>
+            </div>
+
+            <div class="speed-control">
+                <span>速度 (WPM):</span>
+                <input type="range" id="playWpmSlider" min="5" max="40" value="20">
+                <span id="playWpmValue">20</span>
+            </div>
+
+            <h3 style="margin-top: var(--space-xl); font-weight: 400; color: var(--text-secondary); font-size: 1rem;">常用符号表</h3>
+            <div class="cheatsheet">
+                <div class="cheat-item"><div class="cheat-char">A</div><div class="cheat-code">.-</div></div>
+                <div class="cheat-item"><div class="cheat-char">B</div><div class="cheat-code">-...</div></div>
+                <div class="cheat-item"><div class="cheat-char">C</div><div class="cheat-code">-.-.</div></div>
+                <div class="cheat-item"><div class="cheat-char">D</div><div class="cheat-code">-..</div></div>
+                <div class="cheat-item"><div class="cheat-char">E</div><div class="cheat-code">.</div></div>
+                <div class="cheat-item"><div class="cheat-char">F</div><div class="cheat-code">..-.</div></div>
+                <div class="cheat-item"><div class="cheat-char">G</div><div class="cheat-code">--.</div></div>
+                <div class="cheat-item"><div class="cheat-char">H</div><div class="cheat-code">....</div></div>
+                <div class="cheat-item"><div class="cheat-char">I</div><div class="cheat-code">..</div></div>
+                <div class="cheat-item"><div class="cheat-char">J</div><div class="cheat-code">.---</div></div>
+                <div class="cheat-item"><div class="cheat-char">K</div><div class="cheat-code">-.-</div></div>
+                <div class="cheat-item"><div class="cheat-char">L</div><div class="cheat-code">.-..</div></div>
+                <div class="cheat-item"><div class="cheat-char">M</div><div class="cheat-code">--</div></div>
+                <div class="cheat-item"><div class="cheat-char">N</div><div class="cheat-code">-.</div></div>
+                <div class="cheat-item"><div class="cheat-char">O</div><div class="cheat-code">---</div></div>
+                <div class="cheat-item"><div class="cheat-char">P</div><div class="cheat-code">.--.</div></div>
+                <div class="cheat-item"><div class="cheat-char">Q</div><div class="cheat-code">--.-</div></div>
+                <div class="cheat-item"><div class="cheat-char">R</div><div class="cheat-code">.-.</div></div>
+                <div class="cheat-item"><div class="cheat-char">S</div><div class="cheat-code">...</div></div>
+                <div class="cheat-item"><div class="cheat-char">T</div><div class="cheat-code">-</div></div>
+                <div class="cheat-item"><div class="cheat-char">U</div><div class="cheat-code">..-</div></div>
+                <div class="cheat-item"><div class="cheat-char">V</div><div class="cheat-code">...-</div></div>
+                <div class="cheat-item"><div class="cheat-char">W</div><div class="cheat-code">.--</div></div>
+                <div class="cheat-item"><div class="cheat-char">X</div><div class="cheat-code">-..-</div></div>
+                <div class="cheat-item"><div class="cheat-char">Y</div><div class="cheat-code">-.--</div></div>
+                <div class="cheat-item"><div class="cheat-char">Z</div><div class="cheat-code">--..</div></div>
+                <div class="cheat-item"><div class="cheat-char">0</div><div class="cheat-code">-----</div></div>
+                <div class="cheat-item"><div class="cheat-char">1</div><div class="cheat-code">.----</div></div>
+                <div class="cheat-item"><div class="cheat-char">2</div><div class="cheat-code">..---</div></div>
+                <div class="cheat-item"><div class="cheat-char">3</div><div class="cheat-code">...--</div></div>
+                <div class="cheat-item"><div class="cheat-char">4</div><div class="cheat-code">....-</div></div>
+                <div class="cheat-item"><div class="cheat-char">5</div><div class="cheat-code">.....</div></div>
+                <div class="cheat-item"><div class="cheat-char">6</div><div class="cheat-code">-....</div></div>
+                <div class="cheat-item"><div class="cheat-char">7</div><div class="cheat-code">--...</div></div>
+                <div class="cheat-item"><div class="cheat-char">8</div><div class="cheat-code">---..</div></div>
+                <div class="cheat-item"><div class="cheat-char">9</div><div class="cheat-code">----.</div></div>
+            </div>
+        </div>
     </div>
 
-    <!-- 编码面板 -->
-    <div class="panel active" id="encodePanel">
-      <h2>文本 → 莫斯电码</h2>
-      <textarea id="encodeInput" placeholder="输入要转换的文本..."></textarea>
-      <div class="controls">
-        <button class="btn btn-primary" id="encodeBtn">转换</button>
-        <button class="btn btn-secondary" id="copyEncode">复制结果</button>
-      </div>
-      <div class="output-box" id="encodeOutput">结果将显示在这里</div>
-    </div>
+    <script>
+        const morseCode = {
+            'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+            'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+            'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+            'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+            'Y': '-.--', 'Z': '--..', '1': '.----', '2': '..---', '3': '...--',
+            '4': '....-', '5': '.....', '6': '-....', '7': '--...', '8': '---..',
+            '9': '----.', '0': '-----', ' ': '/'
+        };
 
-    <!-- 解码面板 -->
-    <div class="panel" id="decodePanel">
-      <h2>莫斯电码 → 文本</h2>
-      <textarea id="decodeInput" placeholder="输入莫斯电码 (用 . 表示短信号, - 表示长信号, 空格分隔字符, / 表示空格)"></textarea>
-      <div class="controls">
-        <button class="btn btn-primary" id="decodeBtn">转换</button>
-        <button class="btn btn-secondary" id="copyDecode">复制结果</button>
-      </div>
-      <div class="output-box" id="decodeOutput">结果将显示在这里</div>
+        const reverseMorse = Object.fromEntries(Object.entries(morseCode).map(([k, v]) => [v, k]));
 
-      <div class="speed-control">
-        <span>WPM:</span>
-        <input type="range" id="wpmSlider" min="5" max="40" value="20">
-        <span id="wpmValue">20</span>
-      </div>
-    </div>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + 'Panel').classList.add('active');
+            });
+        });
 
-    <!-- 播放面板 -->
-    <div class="panel" id="playPanel">
-      <h2>发送莫斯电码</h2>
-      <textarea id="playInput" placeholder="输入要播放的莫斯电码或文本..."></textarea>
-      <div class="controls">
-        <button class="btn btn-primary" id="playBtn">播放</button>
-        <button class="btn btn-stop" id="stopPlayBtn" style="display:none;">停止</button>
-      </div>
+        // Encode
+        document.getElementById('encodeBtn').addEventListener('click', () => {
+            const text = document.getElementById('encodeInput').value.toUpperCase();
+            const morse = text.split('').map(char => morseCode[char] || char).join(' ');
+            document.getElementById('encodeOutput').textContent = morse || '无法转换的字符';
+        });
 
-      <div class="visualizer">
-        <div id="signalLight"></div>
-        <div id="signalStatus">准备</div>
-      </div>
+        document.getElementById('copyEncode').addEventListener('click', () => {
+            navigator.clipboard.writeText(document.getElementById('encodeOutput').textContent);
+        });
 
-      <div class="speed-control">
-        <span>速度 (WPM):</span>
-        <input type="range" id="playWpmSlider" min="5" max="40" value="20">
-        <span id="playWpmValue">20</span>
-      </div>
+        // Decode
+        document.getElementById('decodeBtn').addEventListener('click', () => {
+            const morse = document.getElementById('decodeInput').value.trim();
+            const text = morse.split(/\s+/).map(code => reverseMorse[code] || code).join('');
+            document.getElementById('decodeOutput').textContent = text || '无法解码';
+        });
 
-      <h3 style="margin-top: 2rem; font-weight: 400; color: #888;">常用符号表</h3>
-      <div class="cheatsheet">
-        <div class="cheat-item"><div class="cheat-char">A</div><div class="cheat-code">.-</div></div>
-        <div class="cheat-item"><div class="cheat-char">B</div><div class="cheat-code">-...</div></div>
-        <div class="cheat-item"><div class="cheat-char">C</div><div class="cheat-code">-.-.</div></div>
-        <div class="cheat-item"><div class="cheat-char">D</div><div class="cheat-code">-..</div></div>
-        <div class="cheat-item"><div class="cheat-char">E</div><div class="cheat-code">.</div></div>
-        <div class="cheat-item"><div class="cheat-char">F</div><div class="cheat-code">..-.</div></div>
-        <div class="cheat-item"><div class="cheat-char">G</div><div class="cheat-code">--.</div></div>
-        <div class="cheat-item"><div class="cheat-char">H</div><div class="cheat-code">....</div></div>
-        <div class="cheat-item"><div class="cheat-char">I</div><div class="cheat-code">..</div></div>
-        <div class="cheat-item"><div class="cheat-char">J</div><div class="cheat-code">.---</div></div>
-        <div class="cheat-item"><div class="cheat-char">K</div><div class="cheat-code">-.-</div></div>
-        <div class="cheat-item"><div class="cheat-char">L</div><div class="cheat-code">.-..</div></div>
-        <div class="cheat-item"><div class="cheat-char">M</div><div class="cheat-code">--</div></div>
-        <div class="cheat-item"><div class="cheat-char">N</div><div class="cheat-code">-.</div></div>
-        <div class="cheat-item"><div class="cheat-char">O</div><div class="cheat-code">---</div></div>
-        <div class="cheat-item"><div class="cheat-char">P</div><div class="cheat-code">.--.</div></div>
-        <div class="cheat-item"><div class="cheat-char">Q</div><div class="cheat-code">--.-</div></div>
-        <div class="cheat-item"><div class="cheat-char">R</div><div class="cheat-code">.-.</div></div>
-        <div class="cheat-item"><div class="cheat-char">S</div><div class="cheat-code">...</div></div>
-        <div class="cheat-item"><div class="cheat-char">T</div><div class="cheat-code">-</div></div>
-        <div class="cheat-item"><div class="cheat-char">U</div><div class="cheat-code">..-</div></div>
-        <div class="cheat-item"><div class="cheat-char">V</div><div class="cheat-code">...-</div></div>
-        <div class="cheat-item"><div class="cheat-char">W</div><div class="cheat-code">.--</div></div>
-        <div class="cheat-item"><div class="cheat-char">X</div><div class="cheat-code">-..-</div></div>
-        <div class="cheat-item"><div class="cheat-char">Y</div><div class="cheat-code">-.--</div></div>
-        <div class="cheat-item"><div class="cheat-char">Z</div><div class="cheat-code">--..</div></div>
-        <div class="cheat-item"><div class="cheat-char">0</div><div class="cheat-code">-----</div></div>
-        <div class="cheat-item"><div class="cheat-char">1</div><div class="cheat-code">.----</div></div>
-        <div class="cheat-item"><div class="cheat-char">2</div><div class="cheat-code">..---</div></div>
-        <div class="cheat-item"><div class="cheat-char">3</div><div class="cheat-code">...--</div></div>
-        <div class="cheat-item"><div class="cheat-char">4</div><div class="cheat-code">....-</div></div>
-        <div class="cheat-item"><div class="cheat-char">5</div><div class="cheat-code">.....</div></div>
-        <div class="cheat-item"><div class="cheat-char">6</div><div class="cheat-code">-....</div></div>
-        <div class="cheat-item"><div class="cheat-char">7</div><div class="cheat-code">--...</div></div>
-        <div class="cheat-item"><div class="cheat-char">8</div><div class="cheat-code">---..</div></div>
-        <div class="cheat-item"><div class="cheat-char">9</div><div class="cheat-code">----.</div></div>
-      </div>
-    </div>
-  </div>
+        document.getElementById('copyDecode').addEventListener('click', () => {
+            navigator.clipboard.writeText(document.getElementById('decodeOutput').textContent);
+        });
 
-  <script>
-    const morseCode = {
-      'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
-      'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
-      'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
-      'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
-      'Y': '-.--', 'Z': '--..', '1': '.----', '2': '..---', '3': '...--',
-      '4': '....-', '5': '.....', '6': '-....', '7': '--...', '8': '---..',
-      '9': '----.', '0': '-----', ' ': '/'
-    };
+        // Play
+        let isPlaying = false;
+        let audioContext = null;
+        let playTimeout = null;
 
-    const reverseMorse = Object.fromEntries(Object.entries(morseCode).map(([k, v]) => [v, k]));
+        document.getElementById('wpmSlider').addEventListener('input', e => {
+            document.getElementById('wpmValue').textContent = e.target.value;
+        });
 
-    // 标签切换
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById(tab.dataset.tab + 'Panel').classList.add('active');
-      });
-    });
+        document.getElementById('playWpmSlider').addEventListener('input', e => {
+            document.getElementById('playWpmValue').textContent = e.target.value;
+        });
 
-    // 编码
-    document.getElementById('encodeBtn').addEventListener('click', () => {
-      const text = document.getElementById('encodeInput').value.toUpperCase();
-      const morse = text.split('').map(char => morseCode[char] || char).join(' ');
-      document.getElementById('encodeOutput').textContent = morse || '无法转换的字符';
-    });
-
-    document.getElementById('copyEncode').addEventListener('click', () => {
-      navigator.clipboard.writeText(document.getElementById('encodeOutput').textContent);
-    });
-
-    // 解码
-    document.getElementById('decodeBtn').addEventListener('click', () => {
-      const morse = document.getElementById('decodeInput').value.trim();
-      const text = morse.split(/\s+/).map(code => reverseMorse[code] || code).join('');
-      document.getElementById('decodeOutput').textContent = text || '无法解码';
-    });
-
-    document.getElementById('copyDecode').addEventListener('click', () => {
-      navigator.clipboard.writeText(document.getElementById('decodeOutput').textContent);
-    });
-
-    // 播放
-    let isPlaying = false;
-    let audioContext = null;
-    let playTimeout = null;
-
-    document.getElementById('wpmSlider').addEventListener('input', e => {
-      document.getElementById('wpmValue').textContent = e.target.value;
-    });
-
-    document.getElementById('playWpmSlider').addEventListener('input', e => {
-      document.getElementById('playWpmValue').textContent = e.target.value;
-    });
-
-    function initAudio() {
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      }
-    }
-
-    function playTone(duration, wpm) {
-      initAudio();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      oscillator.frequency.value = 600;
-      oscillator.type = 'sine';
-
-      gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-      gainNode.gain.setValueAtTime(0, audioContext.currentTime + duration);
-
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + duration);
-    }
-
-    function lightOn() {
-      document.getElementById('signalLight').classList.add('on');
-      document.getElementById('signalStatus').textContent = '发送中...';
-    }
-
-    function lightOff() {
-      document.getElementById('signalLight').classList.remove('on');
-    }
-
-    async function playMorse(morseText, wpm) {
-      isPlaying = true;
-      document.getElementById('playBtn').style.display = 'none';
-      document.getElementById('stopPlayBtn').style.display = 'inline-block';
-
-      // 基础时间单位 (秒)
-      const unit = 1.2 / wpm;
-
-      for (const char of morseText) {
-        if (!isPlaying) break;
-
-        if (char === '.') {
-          lightOn();
-          playTone(unit, wpm);
-          await new Promise(r => setTimeout(r, unit * 1000));
-          lightOff();
-          await new Promise(r => setTimeout(r, unit * 1000));
-        } else if (char === '-') {
-          lightOn();
-          playTone(unit * 3, wpm);
-          await new Promise(r => setTimeout(r, unit * 3 * 1000));
-          lightOff();
-          await new Promise(r => setTimeout(r, unit * 1000));
-        } else if (char === ' ') {
-          await new Promise(r => setTimeout(r, unit * 3 * 1000));
-        } else if (char === '/') {
-          await new Promise(r => setTimeout(r, unit * 7 * 1000));
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
         }
-      }
 
-      stopPlay();
-    }
+        function playTone(duration) {
+            initAudio();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
 
-    function stopPlay() {
-      isPlaying = false;
-      clearTimeout(playTimeout);
-      lightOff();
-      document.getElementById('playBtn').style.display = 'inline-block';
-      document.getElementById('stopPlayBtn').style.display = 'none';
-      document.getElementById('signalStatus').textContent = '准备';
-    }
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
 
-    document.getElementById('playBtn').addEventListener('click', () => {
-      let input = document.getElementById('playInput').value.trim();
+            oscillator.frequency.value = 600;
+            oscillator.type = 'sine';
 
-      // 如果输入的是普通文本，先转换为莫斯电码
-      if (!/^[.-\/\s]+$/.test(input)) {
-        input = input.toUpperCase().split('').map(char => morseCode[char] || char).join(' ');
-      }
+            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime + duration);
 
-      if (input) {
-        const wpm = parseInt(document.getElementById('playWpmSlider').value);
-        playMorse(input, wpm);
-      }
-    });
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
 
-    document.getElementById('stopPlayBtn').addEventListener('click', stopPlay);
-  </script>
+        function lightOn() {
+            document.getElementById('signalLight').classList.add('on');
+            document.getElementById('signalStatus').textContent = '发送中...';
+        }
+
+        function lightOff() {
+            document.getElementById('signalLight').classList.remove('on');
+        }
+
+        async function playMorse(morseText, wpm) {
+            isPlaying = true;
+            document.getElementById('playBtn').style.display = 'none';
+            document.getElementById('stopPlayBtn').style.display = 'inline-block';
+
+            const unit = 1.2 / wpm;
+
+            for (const char of morseText) {
+                if (!isPlaying) break;
+
+                if (char === '.') {
+                    lightOn();
+                    playTone(unit);
+                    await new Promise(r => setTimeout(r, unit * 1000));
+                    lightOff();
+                    await new Promise(r => setTimeout(r, unit * 1000));
+                } else if (char === '-') {
+                    lightOn();
+                    playTone(unit * 3);
+                    await new Promise(r => setTimeout(r, unit * 3 * 1000));
+                    lightOff();
+                    await new Promise(r => setTimeout(r, unit * 1000));
+                } else if (char === ' ') {
+                    await new Promise(r => setTimeout(r, unit * 3 * 1000));
+                } else if (char === '/') {
+                    await new Promise(r => setTimeout(r, unit * 7 * 1000));
+                }
+            }
+
+            stopPlay();
+        }
+
+        function stopPlay() {
+            isPlaying = false;
+            clearTimeout(playTimeout);
+            lightOff();
+            document.getElementById('playBtn').style.display = 'inline-block';
+            document.getElementById('stopPlayBtn').style.display = 'none';
+            document.getElementById('signalStatus').textContent = '准备';
+        }
+
+        document.getElementById('playBtn').addEventListener('click', () => {
+            let input = document.getElementById('playInput').value.trim();
+
+            if (!/^[.-\/\s]+$/.test(input)) {
+                input = input.toUpperCase().split('').map(char => morseCode[char] || char).join(' ');
+            }
+
+            if (input) {
+                const wpm = parseInt(document.getElementById('playWpmSlider').value);
+                playMorse(input, wpm);
+            }
+        });
+
+        document.getElementById('stopPlayBtn').addEventListener('click', stopPlay);
+    </script>
 </body>
 </html>

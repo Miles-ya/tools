@@ -5,17 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>图片尺寸调整工具</title>
     <style>
-        * {
+        /* ========================================
+           Light Theme Variables
+           ======================================== */
+        :root {
+            --color-dark: #141413;
+            --color-light: #faf9f5;
+            --color-mid: #b0aea5;
+            --color-orange: #d97757;
+            --color-blue: #6a9bcc;
+            --color-green: #788c5d;
+            --bg-primary: var(--color-light);
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-input: #f0eeea;
+            --text-primary: var(--color-dark);
+            --text-secondary: #5a5a52;
+            --text-muted: #8a8a7e;
+            --accent: var(--color-orange);
+            --accent-hover: #c86a4a;
+            --accent-blue: var(--color-blue);
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+        }
+
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #f5f7fa;
+            font-family: 'Lora', Georgia, serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
-            padding: 20px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            padding: var(--space-xl) var(--space-lg);
+        }
+
+        h1, h2, h3 {
+            font-family: 'Poppins', Arial, sans-serif;
+            font-weight: 500;
+            line-height: 1.3;
         }
 
         .container {
@@ -23,43 +64,50 @@
             margin: 0 auto;
         }
 
-        h1 {
-            color: #2d3748;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
+        header {
+            margin-bottom: var(--space-xl);
         }
 
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+        /* Upload Zone */
         .upload-zone {
-            background: #fff;
-            border: 2px dashed #cbd5e0;
-            border-radius: 12px;
-            padding: 40px;
+            background: var(--bg-card);
+            border: 2px dashed rgba(20, 20, 19, 0.15);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
             text-align: center;
             cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 20px;
+            transition: all var(--transition-normal);
+            margin-bottom: var(--space-lg);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
         .upload-zone:hover,
         .upload-zone.dragover {
-            border-color: #4299e1;
-            background: #ebf8ff;
+            border-color: var(--accent);
+            background: rgba(217, 119, 87, 0.05);
         }
 
         .upload-zone p {
-            color: #718096;
-            margin-bottom: 10px;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-sm);
         }
 
         .upload-zone .hint {
             font-size: 0.85rem;
-            color: #a0aec0;
+            color: var(--text-muted);
         }
 
+        /* Workspace */
         .workspace {
             display: grid;
             grid-template-columns: 300px 1fr;
-            gap: 20px;
+            gap: var(--space-lg);
         }
 
         @media (max-width: 768px) {
@@ -68,44 +116,46 @@
             }
         }
 
+        /* Controls Panel */
         .controls {
-            background: #fff;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            height: fit-content;
+            background: var(--bg-card);
+            border: 1px solid rgba(176, 174, 165, 0.15);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
         }
 
         .control-group {
-            margin-bottom: 20px;
+            margin-bottom: var(--space-md);
         }
 
         .control-group label {
             display: block;
             font-size: 0.85rem;
-            color: #718096;
-            margin-bottom: 6px;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-xs);
         }
 
         .control-group input[type="number"],
         .control-group select {
             width: 100%;
             padding: 10px 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
+            background: var(--bg-input);
+            border: 1px solid rgba(176, 174, 165, 0.2);
+            border-radius: var(--radius-sm);
             font-size: 0.95rem;
-            transition: all 0.2s;
-            outline: none;
+            color: var(--text-primary);
+            transition: all var(--transition-fast);
         }
 
         .control-group input[type="number"]:focus,
         .control-group select:focus {
-            border-color: #4299e1;
+            outline: none;
+            border-color: var(--accent);
         }
 
         .row {
             display: flex;
-            gap: 10px;
+            gap: var(--space-sm);
         }
 
         .row .control-group {
@@ -115,8 +165,8 @@
         .checkbox-group {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 15px;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-md);
         }
 
         .checkbox-group input[type="checkbox"] {
@@ -127,19 +177,19 @@
 
         .checkbox-group label {
             font-size: 0.9rem;
-            color: #4a5568;
+            color: var(--text-secondary);
             cursor: pointer;
         }
 
         .slider-group {
-            margin-bottom: 15px;
+            margin-bottom: var(--space-md);
         }
 
         .slider-group input[type="range"] {
             width: 100%;
             height: 6px;
             border-radius: 3px;
-            background: #e2e8f0;
+            background: var(--bg-input);
             outline: none;
             -webkit-appearance: none;
         }
@@ -148,10 +198,10 @@
             -webkit-appearance: none;
             width: 18px;
             height: 18px;
-            border-radius: 50%;
-            background: #4299e1;
+            border-radius: var(--radius-full);
+            background: var(--accent);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: transform var(--transition-fast);
         }
 
         .slider-group input[type="range"]::-webkit-slider-thumb:hover {
@@ -161,45 +211,72 @@
         .slider-value {
             text-align: right;
             font-size: 0.85rem;
-            color: #4a5568;
-            margin-top: 5px;
+            color: var(--text-secondary);
+            margin-top: var(--space-xs);
         }
 
         .btn {
             width: 100%;
             padding: 12px;
             border: none;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             font-size: 0.95rem;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all var(--transition-fast);
             font-weight: 500;
-            margin-bottom: 10px;
+            margin-bottom: var(--space-sm);
+            font-family: inherit;
         }
 
         .btn-primary {
-            background: #4299e1;
-            color: #fff;
+            background: var(--accent);
+            color: var(--color-light);
         }
 
         .btn-primary:hover {
-            background: #3182ce;
+            background: var(--accent-hover);
         }
 
         .btn-secondary {
-            background: #edf2f7;
-            color: #4a5568;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
         }
 
         .btn-secondary:hover {
-            background: #e2e8f0;
+            background: rgba(255, 255, 255, 0.15);
         }
 
+        /* Size Presets */
+        .size-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-xs);
+            margin-bottom: var(--space-md);
+        }
+
+        .preset-btn {
+            padding: 4px 10px;
+            border: 1px solid rgba(176, 174, 165, 0.2);
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-family: inherit;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        /* Preview */
         .preview {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid rgba(176, 174, 165, 0.15);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
             overflow: auto;
         }
 
@@ -207,19 +284,20 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: var(--space-md);
             flex-wrap: wrap;
-            gap: 10px;
+            gap: var(--space-sm);
         }
 
         .preview-title {
             font-size: 0.95rem;
-            color: #4a5568;
+            color: var(--text-secondary);
+            font-weight: 400;
         }
 
         .preview-info {
             font-size: 0.85rem;
-            color: #a0aec0;
+            color: var(--text-muted);
         }
 
         .preview-container {
@@ -228,8 +306,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #f7fafc;
-            border-radius: 8px;
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
         }
 
         .preview-container img {
@@ -239,40 +317,19 @@
         }
 
         .placeholder {
-            color: #a0aec0;
+            color: var(--text-muted);
         }
 
         .hidden {
             display: none !important;
         }
-
-        .size-presets {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-
-        .preset-btn {
-            padding: 6px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            background: #fff;
-            font-size: 0.8rem;
-            color: #4a5568;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .preset-btn:hover {
-            border-color: #4299e1;
-            color: #4299e1;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>图片尺寸调整工具</h1>
+        <header>
+            <h1>图片尺寸调整工具</h1>
+        </header>
 
         <div class="upload-zone" id="uploadZone">
             <p>点击或拖拽图片到此处</p>
@@ -368,7 +425,6 @@
         let originalHeight = 0;
         let aspectRatio = 0;
 
-        // 隐藏质量控制（仅JPEG/WebP需要）
         function updateQualityVisibility() {
             const format = outputFormat.value;
             qualityGroup.style.display = format === 'image/png' ? 'none' : 'block';
@@ -376,7 +432,7 @@
         outputFormat.addEventListener('change', updateQualityVisibility);
         updateQualityVisibility();
 
-        // 文件输入
+        // File input
         uploadZone.addEventListener('click', () => {
             const input = document.createElement('input');
             input.type = 'file';
@@ -387,7 +443,7 @@
             input.click();
         });
 
-        // 拖拽
+        // Drag & Drop
         uploadZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadZone.classList.add('dragover');
@@ -406,7 +462,7 @@
             }
         });
 
-        // 粘贴
+        // Paste
         document.addEventListener('paste', (e) => {
             const items = e.clipboardData.items;
             for (let item of items) {
@@ -431,7 +487,6 @@
                     previewImg.src = e.target.result;
                     previewInfo.textContent = `原始: ${originalWidth} × ${originalHeight}`;
 
-                    // 初始设置目标尺寸
                     targetWidth.value = originalWidth;
                     targetHeight.value = originalHeight;
                     scaleSlider.value = 100;
@@ -444,7 +499,7 @@
             reader.readAsDataURL(file);
         }
 
-        // 保持宽高比
+        // Maintain aspect ratio
         let isUpdatingFromWidth = false;
         targetWidth.addEventListener('input', () => {
             if (maintainRatio.checked && originalImage) {
@@ -460,7 +515,7 @@
             }
         });
 
-        // 缩放滑块
+        // Scale slider
         scaleSlider.addEventListener('input', () => {
             const scale = scaleSlider.value / 100;
             scaleValue.textContent = scaleSlider.value;
@@ -472,12 +527,12 @@
             targetHeight.value = newHeight;
         });
 
-        // 质量滑块
+        // Quality slider
         qualitySlider.addEventListener('input', () => {
             qualityValue.textContent = qualitySlider.value;
         });
 
-        // 预设尺寸
+        // Preset sizes
         document.querySelectorAll('.preset-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 targetWidth.value = btn.dataset.width;
@@ -486,7 +541,7 @@
             });
         });
 
-        // 应用调整
+        // Apply adjustments
         document.getElementById('applyBtn').addEventListener('click', () => {
             if (!originalImage) return;
 
@@ -507,7 +562,7 @@
             previewInfo.textContent = `调整后: ${canvas.width} × ${canvas.height}`;
         });
 
-        // 下载
+        // Download
         document.getElementById('downloadBtn').addEventListener('click', () => {
             if (!previewImg.src) return;
 
@@ -518,7 +573,7 @@
             link.click();
         });
 
-        // 重置
+        // Reset
         document.getElementById('resetBtn').addEventListener('click', () => {
             originalImage = null;
             previewImg.src = '';

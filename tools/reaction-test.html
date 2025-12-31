@@ -1,295 +1,333 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>反应时间测试</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反应时间测试</title>
+    <style>
+        /* ========================================
+           Light Theme Variables
+           ======================================== */
+        :root {
+            --color-dark: #141413;
+            --color-light: #faf9f5;
+            --color-mid: #b0aea5;
+            --color-orange: #d97757;
+            --color-blue: #6a9bcc;
+            --color-green: #788c5d;
+            --bg-primary: var(--color-light);
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --text-primary: var(--color-dark);
+            --text-secondary: #5a5a52;
+            --text-muted: #8a8a7e;
+            --accent: var(--color-orange);
+            --accent-hover: #c86a4a;
+            --accent-green: var(--color-green);
+            --accent-red: #c94a4a;
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-full: 50%;
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #1a1a2e;
-      color: #eee;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.1s;
-    }
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .container {
-      text-align: center;
-      padding: 2rem;
-    }
+        body {
+            font-family: 'Lora', Georgia, serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-lg);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
 
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 2rem;
-      font-weight: 300;
-    }
+        h1 {
+            font-family: 'Poppins', Arial, sans-serif;
+            font-weight: 400;
+            font-size: 1.8rem;
+            margin-bottom: var(--space-xl);
+            letter-spacing: 0.5px;
+        }
 
-    #game-area {
-      width: 300px;
-      height: 300px;
-      border-radius: 50%;
-      background: #16213e;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      user-select: none;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-      margin: 0 auto 2rem;
-    }
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+        }
 
-    #game-area:hover {
-      transform: scale(1.02);
-    }
+        .instruction {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-md);
+            min-height: 1.5rem;
+        }
 
-    #game-area.waiting {
-      background: #4a1a1a;
-    }
+        .result {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: var(--space-sm);
+            min-height: 3.5rem;
+            font-family: 'Poppins', Arial, sans-serif;
+        }
 
-    #game-area.ready {
-      background: #1a4a2e;
-    }
+        #game-area {
+            width: 280px;
+            height: 280px;
+            border-radius: var(--radius-full);
+            background: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            margin: 0 auto var(--space-xl);
+            border: 2px solid rgba(20, 20, 19, 0.1);
+            font-size: 1.2rem;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
 
-    #game-area.clicked {
-      background: #4a3a1a;
-    }
+        #game-area:hover {
+            transform: scale(1.02);
+            border-color: rgba(20, 20, 19, 0.2);
+        }
 
-    .instruction {
-      font-size: 1.1rem;
-      color: #888;
-      margin-bottom: 1rem;
-      min-height: 1.5rem;
-    }
+        #game-area.waiting {
+            background: #fef0ed;
+            border-color: var(--accent-red);
+        }
 
-    .result {
-      font-size: 3rem;
-      font-weight: bold;
-      color: #4ecdc4;
-      margin-bottom: 0.5rem;
-      min-height: 3.5rem;
-    }
+        #game-area.ready {
+            background: #edf5ed;
+            border-color: var(--accent-green);
+        }
 
-    .stats {
-      display: flex;
-      gap: 2rem;
-      justify-content: center;
-      margin-top: 2rem;
-      color: #888;
-    }
+        #game-area.clicked {
+            background: #fdf6ed;
+            border-color: var(--accent);
+        }
 
-    .stat-item {
-      text-align: center;
-    }
+        .stats {
+            display: flex;
+            gap: var(--space-xl);
+            justify-content: center;
+            margin-top: var(--space-xl);
+            flex-wrap: wrap;
+        }
 
-    .stat-value {
-      font-size: 1.5rem;
-      color: #fff;
-      font-weight: bold;
-    }
+        .stat-item {
+            text-align: center;
+        }
 
-    .stat-label {
-      font-size: 0.85rem;
-      margin-top: 0.25rem;
-    }
+        .stat-value {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-family: 'Poppins', Arial, sans-serif;
+        }
 
-    .reset-btn {
-      margin-top: 1.5rem;
-      padding: 0.75rem 2rem;
-      font-size: 1rem;
-      background: transparent;
-      border: 2px solid #4ecdc4;
-      color: #4ecdc4;
-      border-radius: 2rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: var(--space-xs);
+        }
 
-    .reset-btn:hover {
-      background: #4ecdc4;
-      color: #1a1a2e;
-    }
+        .history {
+            margin-top: var(--space-xl);
+            display: flex;
+            gap: var(--space-xs);
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 400px;
+        }
 
-    .history {
-      margin-top: 2rem;
-      display: flex;
-      gap: 0.5rem;
-      justify-content: center;
-      flex-wrap: wrap;
-      max-width: 400px;
-    }
+        .history-item {
+            width: 12px;
+            height: 12px;
+            border-radius: var(--radius-full);
+            background: #444;
+        }
 
-    .history-item {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #333;
-    }
+        .history-item.fast { background: var(--accent-green); }
+        .history-item.slow { background: var(--accent-red); }
 
-    .history-item.fast { background: #4ecdc4; }
-    .history-item.slow { background: #ff6b6b; }
-  </style>
+        .reset-btn {
+            margin-top: var(--space-xl);
+            padding: 10px 32px;
+            font-size: 1rem;
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-family: inherit;
+        }
+
+        .reset-btn:hover {
+            background: var(--accent);
+            color: var(--color-light);
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>反应时间测试</h1>
+    <div class="container">
+        <h1>反应时间测试</h1>
 
-    <div class="instruction" id="instruction">点击圆圈开始测试</div>
-    <div class="result" id="result">-</div>
+        <div class="instruction" id="instruction">点击圆圈开始测试</div>
+        <div class="result" id="result">-</div>
 
-    <div id="game-area">开始</div>
+        <div id="game-area">开始</div>
 
-    <div class="stats">
-      <div class="stat-item">
-        <div class="stat-value" id="best">-</div>
-        <div class="stat-label">最佳 (ms)</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value" id="avg">-</div>
-        <div class="stat-label">平均 (ms)</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value" id="count">0</div>
-        <div class="stat-label">测试次数</div>
-      </div>
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="best">-</div>
+                <div class="stat-label">最佳 (ms)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="avg">-</div>
+                <div class="stat-label">平均 (ms)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="count">0</div>
+                <div class="stat-label">测试次数</div>
+            </div>
+        </div>
+
+        <div class="history" id="history"></div>
+
+        <button class="reset-btn" id="reset">重置数据</button>
     </div>
 
-    <div class="history" id="history"></div>
+    <script>
+        const gameArea = document.getElementById('game-area');
+        const instruction = document.getElementById('instruction');
+        const result = document.getElementById('result');
+        const bestEl = document.getElementById('best');
+        const avgEl = document.getElementById('avg');
+        const countEl = document.getElementById('count');
+        const historyEl = document.getElementById('history');
+        const resetBtn = document.getElementById('reset');
 
-    <button class="reset-btn" id="reset">重置数据</button>
-  </div>
+        let state = 'idle';
+        let startTime = 0;
+        let timeoutId = null;
+        let results = [];
 
-  <script>
-    const gameArea = document.getElementById('game-area');
-    const instruction = document.getElementById('instruction');
-    const result = document.getElementById('result');
-    const bestEl = document.getElementById('best');
-    const avgEl = document.getElementById('avg');
-    const countEl = document.getElementById('count');
-    const historyEl = document.getElementById('history');
-    const resetBtn = document.getElementById('reset');
+        gameArea.addEventListener('click', handleClick);
+        resetBtn.addEventListener('click', resetData);
 
-    let state = 'idle'; // idle, waiting, ready
-    let startTime = 0;
-    let timeoutId = null;
-    let results = [];
+        function handleClick() {
+            switch (state) {
+                case 'idle':
+                    startGame();
+                    break;
+                case 'waiting':
+                    failGame('太急了，等绿色出现再点！');
+                    break;
+                case 'ready':
+                    endGame();
+                    break;
+            }
+        }
 
-    // 状态类名映射
-    const stateClasses = {
-      idle: '',
-      waiting: 'waiting',
-      ready: 'ready',
-      clicked: 'clicked'
-    };
+        function startGame() {
+            state = 'waiting';
+            gameArea.className = 'waiting';
+            gameArea.textContent = '等待...';
+            instruction.textContent = '看到绿色就点击！';
 
-    gameArea.addEventListener('click', handleClick);
-    resetBtn.addEventListener('click', resetData);
+            const delay = 1500 + Math.random() * 2500;
 
-    function handleClick() {
-      switch (state) {
-        case 'idle':
-          startGame();
-          break;
-        case 'waiting':
-          // 提前点击，失败
-          failGame('太急了，等绿色出现再点！');
-          break;
-        case 'ready':
-          // 正常点击
-          endGame();
-          break;
-      }
-    }
+            timeoutId = setTimeout(() => {
+                state = 'ready';
+                gameArea.className = 'ready';
+                gameArea.textContent = '点击！';
+                instruction.textContent = '快！';
+                startTime = performance.now();
+            }, delay);
+        }
 
-    function startGame() {
-      state = 'waiting';
-      gameArea.className = 'waiting';
-      gameArea.textContent = '等待...';
-      instruction.textContent = '看到绿色就点击！';
+        function endGame() {
+            const reactionTime = Math.round(performance.now() - startTime);
+            state = 'idle';
+            gameArea.className = '';
+            gameArea.textContent = '再来一次';
 
-      const delay = 1500 + Math.random() * 2500; // 1.5-4秒
+            results.push(reactionTime);
+            updateStats();
+            updateHistory(reactionTime);
 
-      timeoutId = setTimeout(() => {
-        state = 'ready';
-        gameArea.className = 'ready';
-        gameArea.textContent = '点击！';
-        instruction.textContent = '快！';
-        startTime = performance.now();
-      }, delay);
-    }
+            result.textContent = reactionTime + ' ms';
+            instruction.textContent = reactionTime < 200 ? '超快！' : reactionTime < 300 ? '不错！' : '再来一次？';
+        }
 
-    function endGame() {
-      const reactionTime = Math.round(performance.now() - startTime);
-      state = 'idle';
-      gameArea.className = '';
-      gameArea.textContent = '再来一次';
+        function failGame(msg) {
+            clearTimeout(timeoutId);
+            state = 'idle';
+            gameArea.className = 'clicked';
+            gameArea.textContent = '再来';
+            result.textContent = '失败';
+            instruction.textContent = msg;
 
-      results.push(reactionTime);
-      updateStats();
-      updateHistory(reactionTime);
+            setTimeout(() => {
+                gameArea.className = '';
+            }, 500);
+        }
 
-      result.textContent = reactionTime + ' ms';
-      instruction.textContent = reactionTime < 200 ? '超快！' : reactionTime < 300 ? '不错！' : '再来一次？';
-    }
+        function updateStats() {
+            if (results.length === 0) return;
 
-    function failGame(msg) {
-      clearTimeout(timeoutId);
-      state = 'idle';
-      gameArea.className = 'clicked';
-      gameArea.textContent = '再来';
-      result.textContent = '失败';
-      instruction.textContent = msg;
+            const best = Math.min(...results);
+            const avg = Math.round(results.reduce((a, b) => a + b, 0) / results.length);
 
-      setTimeout(() => {
-        gameArea.className = '';
-      }, 500);
-    }
+            bestEl.textContent = best;
+            avgEl.textContent = avg;
+            countEl.textContent = results.length;
+        }
 
-    function updateStats() {
-      if (results.length === 0) return;
+        function updateHistory(time) {
+            const dot = document.createElement('div');
+            dot.className = 'history-item' + (time < 250 ? ' fast' : time > 400 ? ' slow' : '');
+            dot.title = time + ' ms';
+            historyEl.appendChild(dot);
 
-      const best = Math.min(...results);
-      const avg = Math.round(results.reduce((a, b) => a + b, 0) / results.length);
+            while (historyEl.children.length > 20) {
+                historyEl.removeChild(historyEl.firstChild);
+            }
+        }
 
-      bestEl.textContent = best;
-      avgEl.textContent = avg;
-      countEl.textContent = results.length;
-    }
-
-    function updateHistory(time) {
-      const dot = document.createElement('div');
-      dot.className = 'history-item' + (time < 250 ? ' fast' : time > 400 ? ' slow' : '');
-      dot.title = time + ' ms';
-      historyEl.appendChild(dot);
-
-      // 只保留最近20个
-      while (historyEl.children.length > 20) {
-        historyEl.removeChild(historyEl.firstChild);
-      }
-    }
-
-    function resetData() {
-      results = [];
-      bestEl.textContent = '-';
-      avgEl.textContent = '-';
-      countEl.textContent = '0';
-      historyEl.innerHTML = '';
-      result.textContent = '-';
-      instruction.textContent = '点击圆圈开始测试';
-      state = 'idle';
-      gameArea.className = '';
-      gameArea.textContent = '开始';
-    }
-  </script>
+        function resetData() {
+            results = [];
+            bestEl.textContent = '-';
+            avgEl.textContent = '-';
+            countEl.textContent = '0';
+            historyEl.innerHTML = '';
+            result.textContent = '-';
+            instruction.textContent = '点击圆圈开始测试';
+            state = 'idle';
+            gameArea.className = '';
+            gameArea.textContent = '开始';
+        }
+    </script>
 </body>
 </html>
