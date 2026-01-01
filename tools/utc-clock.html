@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UTC 时间显示</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    body.fullscreen {
+      cursor: none;
+    }
+
+    .container {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .label {
+      font-size: 1rem;
+      color: #888;
+      margin-bottom: 1rem;
+      letter-spacing: 2px;
+    }
+
+    .time {
+      font-size: clamp(3rem, 15vw, 12rem);
+      font-weight: 200;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -2px;
+      transition: all 0.2s ease;
+    }
+
+    .date {
+      font-size: clamp(1rem, 4vw, 2.5rem);
+      color: #888;
+      margin-top: 1rem;
+      font-weight: 300;
+    }
+
+    .timezone {
+      margin-top: 2rem;
+      padding: 0.5rem 1.5rem;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2rem;
+      font-size: 0.9rem;
+      color: #aaa;
+      display: inline-block;
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 2rem;
+      display: flex;
+      gap: 1rem;
+      transition: all 0.3s ease;
+      opacity: 1;
+    }
+
+    body.fullscreen .controls {
+      opacity: 0;
+    }
+
+    body.fullscreen:hover .controls {
+      opacity: 1;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .status {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      font-size: 0.8rem;
+      color: #666;
+      transition: all 0.3s ease;
+    }
+
+    body.fullscreen .status {
+      opacity: 0;
+    }
+
+    @media (max-width: 600px) {
+      .controls {
+        bottom: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="status" id="status"></div>
+
+  <div class="container">
+    <div class="label">UTC</div>
+    <div class="time" id="time">00:00:00</div>
+    <div class="date" id="date">1970-01-01</div>
+    <div class="timezone" id="timezone">UTC+0</div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="btnFullscreen">全屏</button>
+    <button class="btn" id="btnSeconds">显示秒数</button>
+    <button class="btn" id="btnCopy">复制时间</button>
+  </div>
+
+  <script>
+    const timeEl = document.getElementById('time');
+    const dateEl = document.getElementById('date');
+    const timezoneEl = document.getElementById('timezone');
+    const btnFullscreen = document.getElementById('btnFullscreen');
+    const btnSeconds = document.getElementById('btnSeconds');
+    const btnCopy = document.getElementById('btnCopy');
+    const statusEl = document.getElementById('status');
+
+    let showSeconds = true;
+    let serverTimeOffset = 0; // 服务器时间与本地时间的偏移量（毫秒）
+    let syncInterval = null;
+
+    // 从 URL 读取状态
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('seconds') === '0') {
+      showSeconds = false;
+      btnSeconds.textContent = '显示秒数';
+    } else {
+      btnSeconds.textContent = '隐藏秒数';
+    }
+
+    // 从 Cloudflare 获取 UTC 时间（全球 CORS 支持）
+    async function syncTime() {
+      try {
+        const start = performance.now();
+        const res = await fetch('https://time.cloudflare.com/__/cloudflare-time?_=' + Date.now());
+        const end = performance.now();
+        const data = await res.json();
+
+        const latency = (end - start) / 2;
+        serverTimeOffset = data.client_time - Date.now() + latency;
+
+        statusEl.textContent = '时间已同步';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      } catch (e) {
+        console.error('时间同步失败:', e);
+        serverTimeOffset = 0;
+        statusEl.textContent = '同步失败，使用本地时间';
+      }
+    }
+
+    function updateDisplay() {
+      // 使用服务器时间 + 偏移量
+      const now = new Date(Date.now() + serverTimeOffset);
+      const utcStr = now.toISOString();
+
+      const datePart = utcStr.split('T')[0];
+      const hms = utcStr.split('T')[1].split(':');
+      const h = hms[0];
+      const m = hms[1];
+      const s = hms[2].split('.')[0];
+
+      timeEl.textContent = showSeconds ? `${h}:${m}:${s}` : `${h}:${m}`;
+      dateEl.textContent = datePart;
+      timezoneEl.textContent = `UTC${now.getTimezoneOffset() === 0 ? '+0' : ''}`;
+    }
+
+    function updateLoop() {
+      updateDisplay();
+      requestAnimationFrame(updateLoop);
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+        document.body.classList.add('fullscreen');
+        btnFullscreen.textContent = '退出全屏';
+      } else {
+        document.exitFullscreen();
+        document.body.classList.remove('fullscreen');
+        btnFullscreen.textContent = '全屏';
+      }
+    }
+
+    function toggleSeconds() {
+      showSeconds = !showSeconds;
+      btnSeconds.textContent = showSeconds ? '隐藏秒数' : '显示秒数';
+      updateTime();
+    }
+
+    function copyTime() {
+      const text = `${dateEl.textContent} ${timeEl.textContent}`;
+      navigator.clipboard.writeText(text).then(() => {
+        statusEl.textContent = '已复制到剪贴板';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      });
+    }
+
+    btnFullscreen.addEventListener('click', toggleFullscreen);
+    btnSeconds.addEventListener('click', toggleSeconds);
+    btnCopy.addEventListener('click', copyTime);
+
+    // ESC 退出全屏监听
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        document.body.classList.remove('fullscreen');
+        btnFullscreen.textContent = '全屏';
+      }
+    });
+
+    // 启动同步
+    syncTime();
+    // 每 30 秒重新同步
+    syncInterval = setInterval(syncTime, 30000);
+
+    // 初始显示
+    updateDisplay();
+    updateLoop();
+  </script>
+</body>
+</html>
